@@ -249,16 +249,16 @@ Player roles are now assigned per-participant in the CSV file:
 
 Examples:
   # List available apps
-  python run.py --list-apps
+  >python run.py --list-apps>
   
   # Run single session with specific app
-  python run.py --app rps --sessions 1
+  <python run.py --app rps_repeat --sessions 1> or <python run.py -a rps_repeat -s 1>
   
   # Run multiple sessions with per-player role assignments
-  python run.py --app rps_repeat --sessions 3
+  >python run.py --app rps_repeat --sessions 3>
   
   # Validate app configuration
-  python run.py --app rps_repeat --validate-only
+  <python run.py --app rps_repeat --validate-only>
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -301,7 +301,7 @@ Examples:
 
     # === MODEL PARAMETERS ===
     parser.add_argument(
-        "-m", "--max-tokens", 
+        "-mt", "--max-tokens", 
         type=int, 
         default=1024,
         help="Maximum tokens for LLM responses (default: 1024)"
