@@ -1,3 +1,0 @@
-session_name,session_id,participant_id,is_human,url,time_in,time_out
-rps_oneshot,n89qt3gi,doppzg5s,0,http://localhost:8000/InitializeParticipant/doppzg5s,2025-05-27T14:15:28.901780+00:00,2025-05-27T14:15:53.547661+00:00
-unknown,n89qt3gi,P1,0,http://localhost:8000/InitializeParticipant/doppzg5s,2025-05-27T14:15:28.901780+00:00,2025-05-27T14:15:53.547661+00:00
