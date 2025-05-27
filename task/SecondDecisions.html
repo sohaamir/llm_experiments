@@ -1,0 +1,76 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Round {{ player.round_number }} - Second Choice and Second Bet
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4>Page Instructions</h4>
+    </div>
+    <div class="card-body">
+        <p>Below are the initial choices made by other players in your group for round {{ player.round_number }}.</p>
+        <p>After reviewing their choices, you can make your second choice and bet.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Other Players' Initial Choices</h4>
+    </div>
+    <div class="card-body">
+        <p>Here are the initial choices that the other players in your group made:</p>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Initial Choice</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player_id, choice in other_players_choices.items %}
+                <tr>
+                    <td>{{ player_id }}</td>
+                    <td>{{ choice }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Your Initial Choice and Bet</h4>
+    </div>
+    <div class="card-body">
+        <p>Your initial choice was: <strong>{{ choice1 }}</strong></p>
+        <p>Your initial bet was: <strong>{{ bet1 }}</strong></p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Your Second Choice</h4>
+    </div>
+    <div class="card-body">
+        <p>You can now make your second choice.</p>
+        {% formfield player.choice2 label="Select your second choice:" %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Your Second Bet</h4>
+    </div>
+    <div class="card-body">
+        <p>Rate how confident you are in your second choice:</p>
+        {% formfield player.bet2 label="Select your second bet:" %}
+    </div>
+</div>
+
+{% next_button %}
+
+{% endblock %}

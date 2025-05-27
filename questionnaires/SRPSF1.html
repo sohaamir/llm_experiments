@@ -1,0 +1,84 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Self-Report Psychopathy Scale - Part 1
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 5 (Part 1 of 3)</h5>
+        </div>
+        <div class="card-body">
+            <p>Please rate the degree to which you agree with the following statements about you. You can be honest because your name is not associated with your responses.</p>
+            
+            <div class="alert alert-info">
+                <p>Rate how much you agree with each statement:<br>
+                Choose from: Disagree Strongly, Disagree, Neutral, Agree, or Agree Strongly</p>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 1: I'm a rebellious person.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_1 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 2: I have never been involved in delinquent gang activity.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_2 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 3: Most people are wimps.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_3 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 4: I've often done something dangerous just for the thrill of it.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_4 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 5: I have tricked someone into giving me money.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_5 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 6: I have assaulted a law enforcement official or social worker.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_6 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 7: I have pretended to be someone else in order to get something.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_7 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 8: I like to see fist-fights.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_8 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 9: I would get a kick out of 'scamming' someone.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_9 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 10: It's fun to see how far you can push people before they get upset.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_10 label="" %}
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

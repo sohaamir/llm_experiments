@@ -1,0 +1,81 @@
+# Virtual Environment
+venv/
+llm_env/
+otree_env/
+
+# Environment Variables
+.env
+
+# Django Files
+staticfiles
+./db.sqlite3
+*.sqlite3
+_static_root
+
+# Bot and Temporary Files
+_bots*s
+__temp*
+__pycache__/
+*.py[cod]
+botex_data/
+data/
+
+# IDE and Editor Files
+.idea
+*~
+.DS_Store
+
+# oTree Specific (including apps)
+*.otreezip
+heroku_cheatsheet.txt
+test/
+
+# R Related Files
+*.Rproj
+*.Rhistory
+*.Rproj.user
+*.RData
+*.Ruserdata
+*.Rhistory
+
+# Data and scripts
+Rmd/
+data/
+output/
+.Rproj.user
+
+# Models
+models/
+
+# Llama
+llama_cpp/
+llama.cpp/
+llama_server
+
+# Environment
+.env
+botex.env
+botexenv/
+,cache*
+
+# Misc scripts and txt files
+run_tinyllama.sh 
+run_llama_server.sh 
+install_llama_cpp.sh 
+download_model.sh 
+long_prompts.txt 
+botex_env.txt 
+broadcast_message.py
+
+# Patches
+deepseek_patch.py
+groq_instructor_patch.py
+
+# Botex data
+botex_source_code_copy/
+
+# Large json files
+*.json
+
+# Apps
+moral_inference/

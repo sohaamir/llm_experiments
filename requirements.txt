@@ -1,0 +1,15 @@
+# oTree and botex dependencies
+otree==5.11.1
+python-dotenv
+botex
+
+# Building the llama.cpp server
+cmake 
+scikit-build 
+setuptools
+
+# LLM providers
+groq
+
+# Patching
+baml-py

@@ -1,0 +1,32 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h2 class="text-center">PARTICIPANT INFORMATION</h2>
+    </div>
+    <div class="card-body">
+        <p class="text-center lead">Please read the following information carefully.</p>
+
+        <p>In this experiment, you will make a series of choices between two options, one of which will reward you by giving you points, whilst the other will reduce your score.
+        <br>
+        <p>You will be playing with <b>four other players in real time</b>, who will concurrently make the same choices.</p>
+        
+        <p><b>However, there is no competition or co-operation with other players, your aim is solely to maximise the amount of points that you score</b>
+        which will be converted into a bonus payment at the end of the experiment. The more points you score, the higher your bonus payment will be!</p>
+        
+        <p>You will receive financial compensation of 10 US Dollars (USD) per hour, which coincides with completing both parts.
+           <b>You may also receive a bonus payment of up to 3 US Dollars (USD) based on your performance in the task.</b></p>
+        
+        <p class="mt-4"><b>Once you have read through this information and are happy to proceed, please press the 'Next' button below.
+            You will receive detailed instructions on how to complete the task.</b></p>
+        </b></p>
+    </div>
+</div>
+
+{% next_button %}
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Apathy Motivation Index - Part 2
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 4 (Part 2 of 2)</h5>
+        </div>
+        <div class="card-body">
+            <p>Please continue indicating the degree to which you agree or disagree with each statement.</p>
+            
+            <div class="alert alert-info">
+                <p>Rate how much you agree or disagree with each statement:<br>
+                Choose from: Completely Untrue, Somewhat Untrue, Neither True nor Untrue, Somewhat True, or Completely True</p>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 10: I don't like to laze around</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_10 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 11: I get things done when they need to be done, without requiring reminders from others</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_11 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 12: When I decide to do something, I am motivated to see it through to the end</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_12 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 13: I feel awful if I say something insensitive</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_13 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 14: I start conversations without being prompted</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_14 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 15: When I have something I need to do, I do it straightaway so it is out of the way</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_15 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 16: I feel bad when I hear an acquaintance has an accident or illness</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_16 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 17: I enjoy choosing what to do from a range of activities</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_17 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 18: If I realise I have been unpleasant to someone, I feel terribly guilty afterwards</h4>
+                <p><strong>How much do you agree or disagree with this statement?</strong></p>
+                {% formfield player.ami_18 label="" %}
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

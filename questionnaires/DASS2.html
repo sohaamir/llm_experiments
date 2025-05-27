@@ -1,0 +1,66 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Depression Anxiety Stress Scale - Part 2
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 2 (Part 2 of 3)</h5>
+        </div>
+        <div class="card-body">
+            <p>Please continue reading each statement and select the option that indicates how much the statement applied to you <strong>over the past week</strong>.</p>
+            
+            <div class="alert alert-info">
+                <p>Rate each statement on how much it applied to you over the past week:<br>
+                Choose from: Did not apply to me at all, Applied to me to some degree (or some of the time), Applied to me to a considerable degree (or a good part of time), or Applied to me very much (or most of the time)</p>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 8: I felt that I was using a lot of nervous energy</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_8 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 9: I was worried about situations in which I might panic and make a fool of myself</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_9 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 10: I felt that I had nothing to look forward to</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_10 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 11: I found myself getting agitated</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_11 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 12: I found it difficult to relax</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_12 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 13: I felt down-hearted and blue</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_13 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 14: I was intolerant of anything that kept me from getting on with what I was doing</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_14 label="" %}
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

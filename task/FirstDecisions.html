@@ -1,0 +1,39 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Round {{ player.round_number }} - First Choice and First Bet
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4>Page Instructions</h4>
+    </div>
+    <div class="card-body">
+        <p>Please make your initial choice and bet for this round (round {{ player.round_number }}), then submit the form.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Make your initial choice</h4>
+    </div>
+    <div class="card-body">
+        {% formfield player.choice1 label="Select your choice:" %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Make your initial bet</h4>
+    </div>
+    <div class="card-body">
+        <p>Rate how confident you are in your choice:</p>
+        {% formfield player.bet1 label="Select your bet:" %}
+    </div>
+</div>
+
+{% next_button %}
+
+{% endblock %}

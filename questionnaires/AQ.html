@@ -1,0 +1,81 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 3</h5>
+        </div>
+        <div class="card-body">
+            <p>Please read each of the following statements very carefully and rate how strongly you agree or disagree with each by selecting the appropriate option.</p>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width: 60%">Statement</th>
+                        <th style="width: 40%">Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. I often notice small sounds when others do not.</td>
+                        <td>{% formfield player.aq_1 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>2. I usually concentrate more on the whole picture, rather than the small details.</td>
+                        <td>{% formfield player.aq_2 label="" %}</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td>Attention check: Please select 'Definitely Disagree' for this question.</td>
+                        <td>{% formfield player.aq_check_1 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>3. I find it easy to do more than one thing at once.</td>
+                        <td>{% formfield player.aq_3 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>4. If there is an interruption, I can switch back to what I was doing very quickly.</td>
+                        <td>{% formfield player.aq_4 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>5. I find it easy to 'read between the lines' when someone is talking to me.</td>
+                        <td>{% formfield player.aq_5 label="" %}</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td>Attention check: Please select 'Definitely Agree' for this question.</td>
+                        <td>{% formfield player.aq_check_2 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>6. I know how to tell if someone listening to me is getting bored.</td>
+                        <td>{% formfield player.aq_6 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>7. When I'm reading a story, I find it difficult to work out the characters' intentions.</td>
+                        <td>{% formfield player.aq_7 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>8. I like to collect information about categories of things (e.g., types of car, types of bird, types of train, types of plant, etc.).</td>
+                        <td>{% formfield player.aq_8 label="" %}</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td>Attention check: Please select 'Slightly Agree' for this question.</td>
+                        <td>{% formfield player.aq_check_3 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>9. I find it easy to work out what someone is thinking or feeling just by looking at their face.</td>
+                        <td>{% formfield player.aq_9 label="" %}</td>
+                    </tr>
+                    <tr>
+                        <td>10. I find it difficult to work out people's intentions.</td>
+                        <td>{% formfield player.aq_10 label="" %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

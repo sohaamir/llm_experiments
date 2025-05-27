@@ -1,0 +1,68 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Game Results
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-{{ result_class }} text-white">
+        <h4>{{ result_text }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-6">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Your Choice</h5>
+                    </div>
+                    <div class="card-body">
+                        <h3>
+                            {% if player.choice == 'R' %}🪨{% elif player.choice == 'P' %}📄{% else %}✂️{% endif %}
+                        </h3>
+                        <h4>{{ player_choice_display }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>Opponent's Choice</h5>
+                    </div>
+                    <div class="card-body">
+                        <h3>
+                            {% if player.opponent_choice == 'R' %}🪨{% elif player.opponent_choice == 'P' %}📄{% else %}✂️{% endif %}
+                        </h3>
+                        <h4>{{ opponent_choice_display }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="alert alert-{{ result_class }}">
+                <h5 class="mb-2">{{ result_text }}</h5>
+                <p class="mb-0">You earned <strong>{{ player.points_earned }}</strong> point(s) this round.</p>
+            </div>
+        </div>
+        
+        {% if player.result == 'win' %}
+        <p class="text-center">
+            <strong>{{ player_choice_display }}</strong> beats <strong>{{ opponent_choice_display }}</strong>!
+        </p>
+        {% elif player.result == 'tie' %}
+        <p class="text-center">
+            Both players chose <strong>{{ player_choice_display }}</strong>.
+        </p>
+        {% else %}
+        <p class="text-center">
+            <strong>{{ opponent_choice_display }}</strong> beats <strong>{{ player_choice_display }}</strong>.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+{% next_button %}
+{% endblock %}

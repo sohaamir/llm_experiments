@@ -1,0 +1,141 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Social Anxiety Questionnaire - Part 1
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 1 (Part 1 of 3)</h5>
+        </div>
+        <div class="card-body">
+            <p>This questionnaire assesses your feelings in various social situations. For each situation, please answer:</p>
+            
+            <div class="alert alert-info">
+                <p><strong>Question A:</strong> How <strong>anxious</strong> or fearful do you feel in this situation?<br>
+                Choose from: None (0), Mild (1), Moderate (2), or Severe (3)</p>
+                
+                <p><strong>Question B:</strong> How often do you <strong>avoid</strong> this situation?<br>
+                Choose from: Never (0%), Occasionally (1-33%), Often (34-66%), or Usually (67-100%)</p>
+            </div>
+            
+            <p>Please answer both questions for each of the following situations:</p>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 1: Telephoning in public</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when telephoning in public?</strong></p>
+                        {% formfield player.lsas_anxiety_1 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid telephoning in public?</strong></p>
+                        {% formfield player.lsas_avoidance_1 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 2: Participating in small groups</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when participating in small groups?</strong></p>
+                        {% formfield player.lsas_anxiety_2 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid participating in small groups?</strong></p>
+                        {% formfield player.lsas_avoidance_2 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 3: Eating in public places</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when eating in public places?</strong></p>
+                        {% formfield player.lsas_anxiety_3 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid eating in public places?</strong></p>
+                        {% formfield player.lsas_avoidance_3 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 4: Drinking with others in public places</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when drinking with others in public places?</strong></p>
+                        {% formfield player.lsas_anxiety_4 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid drinking with others in public places?</strong></p>
+                        {% formfield player.lsas_avoidance_4 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 5: Talking to people in authority</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when talking to people in authority?</strong></p>
+                        {% formfield player.lsas_anxiety_5 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid talking to people in authority?</strong></p>
+                        {% formfield player.lsas_avoidance_5 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 6: Acting, performing, or giving a talk in front of an audience</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when acting, performing, or giving a talk in front of an audience?</strong></p>
+                        {% formfield player.lsas_anxiety_6 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid acting, performing, or giving a talk in front of an audience?</strong></p>
+                        {% formfield player.lsas_avoidance_6 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 7: Going to a party</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when going to a party?</strong></p>
+                        {% formfield player.lsas_anxiety_7 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid going to a party?</strong></p>
+                        {% formfield player.lsas_avoidance_7 label="" %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Situation 8: Working while being observed</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>How anxious or fearful do you feel when working while being observed?</strong></p>
+                        {% formfield player.lsas_anxiety_8 label="" %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>How often do you avoid working while being observed?</strong></p>
+                        {% formfield player.lsas_avoidance_8 label="" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Rock Paper Scissors - Instructions
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4>Welcome to Rock Paper Scissors!</h4>
+    </div>
+    <div class="card-body">
+        <p>You will play a single round of Rock Paper Scissors against an opponent.</p>
+        
+        <h5>Game Rules:</h5>
+        <ul>
+            <li><strong>Rock</strong> crushes <strong>Scissors</strong></li>
+            <li><strong>Paper</strong> covers <strong>Rock</strong></li>
+            <li><strong>Scissors</strong> cuts <strong>Paper</strong></li>
+            <li>Same choices result in a <strong>tie</strong></li>
+        </ul>
+        
+        <h5>Payoffs:</h5>
+        <div class="alert alert-info">
+            <ul class="mb-0">
+                <li><strong>Win:</strong> {{ win_payoff }} point</li>
+                <li><strong>Lose:</strong> {{ lose_payoff }} points</li>
+                <li><strong>Tie:</strong> {{ tie_payoff }} points</li>
+            </ul>
+        </div>
+        
+        <p class="mt-3">Choose your move carefully and try to outthink your opponent!</p>
+    </div>
+</div>
+
+{% next_button %}
+{% endblock %}

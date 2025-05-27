@@ -1,0 +1,84 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Self-Report Psychopathy Scale - Part 2
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 5 (Part 2 of 3)</h5>
+        </div>
+        <div class="card-body">
+            <p>Please continue rating the degree to which you agree with the following statements about you.</p>
+            
+            <div class="alert alert-info">
+                <p>Rate how much you agree with each statement:<br>
+                Choose from: Disagree Strongly, Disagree, Neutral, Agree, or Agree Strongly</p>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 11: I enjoy doing wild things.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_11 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 12: I have broken into a building or vehicle in order to steal something or vandalize.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_12 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 13: I don't bother to keep in touch with my family any more.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_13 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 14: I rarely follow the rules.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_14 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 15: You should take advantage of other people before they do it to you.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_15 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 16: People sometimes say that I'm cold-hearted.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_16 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 17: I like to have sex with people I barely know.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_17 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 18: I love violent sports and movies.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_18 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 19: Sometimes you have to pretend you like people to get something out of them.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_19 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 20: I was convicted of a serious crime.</h4>
+                <p><strong>How much do you agree with this statement?</strong></p>
+                {% formfield player.srpsf_20 label="" %}
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Depression Anxiety Stress Scale - Part 3
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5>Questionnaire 2 (Part 3 of 3)</h5>
+        </div>
+        <div class="card-body">
+            <p>Please answer the final statements, selecting the option that indicates how much each statement applied to you <strong>over the past week</strong>.</p>
+            
+            <div class="alert alert-info">
+                <p>Rate each statement on how much it applied to you over the past week:<br>
+                Choose from: Did not apply to me at all, Applied to me to some degree (or some of the time), Applied to me to a considerable degree (or a good part of time), or Applied to me very much (or most of the time)</p>
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 15: I felt I was close to panic</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_15 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 16: I was unable to become enthusiastic about anything</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_16 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 17: I felt I wasn't worth much as a person</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_17 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 18: I felt that I was rather touchy</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_18 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 19: I was aware of the action of my heart in the absence of physical exertion (e.g., sense of heart rate increase, heart missing a beat)</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_19 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 20: I felt scared without any good reason</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_20 label="" %}
+            </div>
+            
+            <div class="question-block mb-4">
+                <h4>Statement 21: I felt that life was meaningless</h4>
+                <p><strong>How much did this statement apply to you over the past week?</strong></p>
+                {% formfield player.dass_21 label="" %}
+            </div>
+        </div>
+    </div>
+    
+    {% next_button %}
+{% endblock %}

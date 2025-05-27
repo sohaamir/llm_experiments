@@ -1,0 +1,50 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Make Your Choice
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-white">
+        <h4>Rock Paper Scissors - Your Move</h4>
+    </div>
+    <div class="card-body">
+        <p>Choose your move for this round:</p>
+        
+        <div class="row text-center mb-4">
+            <div class="col-md-4">
+                <div class="card border-secondary">
+                    <div class="card-body">
+                        <h5>🪨 Rock</h5>
+                        <p class="small">Crushes Scissors</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-secondary">
+                    <div class="card-body">
+                        <h5>📄 Paper</h5>
+                        <p class="small">Covers Rock</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-secondary">
+                    <div class="card-body">
+                        <h5>✂️ Scissors</h5>
+                        <p class="small">Cuts Paper</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {% formfield player.choice %}
+        </div>
+    </div>
+</div>
+
+{% next_button %}
+{% endblock %}
