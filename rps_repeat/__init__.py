@@ -13,6 +13,8 @@ Dyads are customizable for the following scenarios:
 - Bot vs Bot (LLM)
 
 Bots can be configured to use different LLMs (player_models.csv) and prompting strategies (prompts.py).
+
+Prompting strategies are taken from Vidler and Walsh (2025) https://arxiv.org/pdf/2503.02582
 """
 
 class C(BaseConstants):
@@ -84,8 +86,8 @@ class Player(BasePlayer):
     result = models.StringField()  # 'win', 'lose', 'tie'
     round_payoff = models.IntegerField(initial=0)
     
-    def get_choice_display(self, choice_letter):
-        """Convert choice letter to full name"""
+    def choice_display_text(self, choice_letter):
+        """Convert choice letter to full name - renamed to avoid conflict with oTree's get_choice_display()"""
         choice_map = {'R': 'Rock', 'P': 'Paper', 'S': 'Scissors'}
         return choice_map.get(choice_letter, choice_letter)
     
@@ -114,23 +116,6 @@ class Player(BasePlayer):
 
 # PAGES
 
-class Instructions(Page):
-    """Instructions page - shown only in round 1"""
-    
-    @staticmethod
-    def is_displayed(player):
-        return player.round_number == 1
-    
-    @staticmethod
-    def vars_for_template(player):
-        return {
-            'num_rounds': C.NUM_ROUNDS,
-            'win_payoff': C.WIN_PAYOFF,
-            'lose_payoff': C.LOSE_PAYOFF,
-            'tie_payoff': C.TIE_PAYOFF
-        }
-
-
 class Choice(Page):
     """Page where player makes their Rock Paper Scissors choice"""
     form_model = 'player'
@@ -140,6 +125,10 @@ class Choice(Page):
     def vars_for_template(player):
         history = player.get_round_history()
         return {
+            'num_rounds': C.NUM_ROUNDS,
+            'win_payoff': C.WIN_PAYOFF,
+            'lose_payoff': C.LOSE_PAYOFF,
+            'tie_payoff': C.TIE_PAYOFF,
             'round_number': player.round_number,
             'total_rounds': C.NUM_ROUNDS,
             'history': history,
@@ -161,16 +150,19 @@ class Results(Page):
     @staticmethod
     def vars_for_template(player):
         opponent = player.get_opponent()
+        is_final = (player.round_number == C.NUM_ROUNDS)
         
         return {
-            'my_choice': player.get_choice_display(player.choice),
-            'opponent_choice': player.get_choice_display(opponent.choice),
+            'my_choice': player.get_choice_display(),
+            'opponent_choice': opponent.get_choice_display(),
             'my_result': player.result,
             'my_payoff': player.round_payoff,
             'round_number': player.round_number,
+            'next_round_number': player.round_number + 1,
             'total_rounds': C.NUM_ROUNDS,
             'total_payoff': player.get_total_payoff(),
-            'is_final_round': player.round_number == C.NUM_ROUNDS,
+            'is_final_round': is_final,
+            'is_not_final_round': not is_final,
             'result_text': {
                 'win': 'You Win!',
                 'lose': 'You Lose!',
@@ -180,7 +172,8 @@ class Results(Page):
                 'win': 'success',
                 'lose': 'danger', 
                 'tie': 'warning'
-            }[player.result]
+            }[player.result],
+            'status_message': "Game Complete! See final results." if is_final else f"Next: Round {player.round_number + 1}"
         }
 
 
@@ -201,8 +194,8 @@ class FinalResults(Page):
             round_opponent = round_player.get_opponent()
             my_history.append({
                 'round': round_player.round_number,
-                'my_choice': round_player.get_choice_display(round_player.choice),
-                'opponent_choice': round_player.get_choice_display(round_opponent.choice),
+                'my_choice': round_player.get_choice_display(),
+                'opponent_choice': round_opponent.get_choice_display(),
                 'result': round_player.result,
                 'payoff': round_player.round_payoff
             })
@@ -236,4 +229,4 @@ class FinalResults(Page):
         }
 
 
-page_sequence = [Instructions, Choice, WaitForPartner, Results, FinalResults]
+page_sequence = [Choice, WaitForPartner, Results, FinalResults]

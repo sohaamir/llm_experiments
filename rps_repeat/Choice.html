@@ -6,88 +6,19 @@ Round {{ round_number }} - Make Your Choice
 {% endblock %}
 
 {% block content %}
-<div class="card mb-4">
-    <div class="card-header bg-warning text-white">
-        <h4>Round {{ round_number }} of {{ total_rounds }}</h4>
-    </div>
-    <div class="card-body">
-        
-        {% if has_history %}
-        <div class="card mb-3">
-            <div class="card-header bg-light">
-                <h6>Previous Rounds</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Round</th>
-                                <th>Your Choice</th>
-                                <th>Opponent's Choice</th>
-                                <th>Result</th>
-                                <th>Points</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for h in history %}
-                            <tr>
-                                <td>{{ h.round }}</td>
-                                <td>
-                                    {% if h.my_choice == 'R' %}🪨 Rock{% elif h.my_choice == 'P' %}📄 Paper{% else %}✂️ Scissors{% endif %}
-                                </td>
-                                <td>
-                                    {% if h.opponent_choice == 'R' %}🪨 Rock{% elif h.opponent_choice == 'P' %}📄 Paper{% else %}✂️ Scissors{% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge badge-{% if h.my_result == 'win' %}success{% elif h.my_result == 'lose' %}danger{% else %}warning{% endif %}">
-                                        {% if h.my_result == 'win' %}Win{% elif h.my_result == 'lose' %}Lose{% else %}Tie{% endif %}
-                                    </span>
-                                </td>
-                                <td>{{ h.my_payoff }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <p><strong>Choose your move for Round {{ round_number }}:</strong></p>
-        
-        <div class="row text-center mb-4">
-            <div class="col-md-4">
-                <div class="card border-secondary">
-                    <div class="card-body">
-                        <h5>🪨 Rock</h5>
-                        <p class="small">Crushes Scissors</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-secondary">
-                    <div class="card-body">
-                        <h5>📄 Paper</h5>
-                        <p class="small">Covers Rock</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-secondary">
-                    <div class="card-body">
-                        <h5>✂️ Scissors</h5>
-                        <p class="small">Cuts Paper</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-group">
-            {% formfield player.choice %}
-        </div>
-    </div>
-</div>
+<h2>Round {{ round_number }} of {{ total_rounds }}</h2>
+
+{% if has_history %}
+<h3>Previous Rounds</h3>
+{% for h in history %}
+<p>Round {{ h.round }}: You chose {{ h.my_choice }}, Opponent chose {{ h.opponent_choice }}, Result: {{ h.my_result }}, Points: {{ h.my_payoff }}</p>
+{% endfor %}
+{% endif %}
+
+<h3>Choose Your Move</h3>
+<p>Choose Rock, Paper, or Scissors:</p>
+
+{% formfield player.choice %}
 
 {% next_button %}
 {% endblock %}

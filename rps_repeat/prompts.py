@@ -8,19 +8,50 @@ def get_prompts(role=None):
     Get the appropriate prompts for the specified role in multi-round RPS.
     
     Args:
-        role (str): Either 'non_thinker', 'thinker', or None for default
+        role (str): Either 'P2', 'P3c', 'P4', or None for default
     
     Returns:
         dict: Dictionary containing the prompts for botex
     """
     
-    # Base system prompt for multi-round RPS
-    base_system = """You are participating in a multi-round Rock Paper Scissors experiment against another player. 
-    You will play multiple rounds and your goal is to maximize your total points.
-    Always respond in valid JSON format only."""
-    
-    # Base analyze prompt
-    base_analyze = """You are playing multi-round Rock Paper Scissors against another player.
+    if role == 'P2':
+        return {
+            "system": """You are participating in a multi-round Rock Paper Scissors experiment against another player. You will play multiple rounds and your goal is to maximize your total points. Always respond in valid JSON format only.""",
+            "analyze_page_q": """You are playing Rock Paper Scissors where winning awards points and losing gives fewer points. Paper beats Rock by covering it, Rock beats Scissors by breaking them, and Scissors beats Paper by cutting it. Matching moves result in a tie where both players get tie points. The payoffs are written as (Player 1 score, Player 2 score) for each possible combination. Only choose a single letter: R, P, or S
+
+Page content: {body}
+Questions: {questions_json}
+
+Respond with valid JSON only."""
+        }
+
+    elif role == 'P3c':
+        return {
+            "system": """You are participating in a multi-round Rock Paper Scissors experiment against another player. You will play multiple rounds and your goal is to maximize your total points. Always respond in valid JSON format only.""",
+            "analyze_page_q": """Make strategic choices based on game patterns and theory. Rules: Randomly choose one of: 'P' (Paper), 'R' (Rock), or 'S' (Scissors). Payoff: Paper beats Rock, Rock beats Scissors, Scissors beats Paper, all other combinations are a tie. The optimal strategy is to randomise your selection of R,P,S. Only choose a single letter: P, R, or S
+
+Page content: {body}
+Questions: {questions_json}
+
+Respond with valid JSON only."""
+        }
+
+    elif role == 'P4':
+        return {
+            "system": """You are participating in a multi-round Rock Paper Scissors experiment against another player. You will play multiple rounds and your goal is to maximize your total points. Always respond in valid JSON format only.""",
+            "analyze_page_q": """You are playing the strategic game called Rock Paper Scissors and you need to choose what your play will be. You can choose one choice from the following list: Rock, Paper or Scissors. Your payoff will depend on the other players choice too: Paper beats Rock and wins points, Scissors beats Paper and wins points, Rock beats Scissors and wins points, all other combinations, and a tie, win fewer points. Only choose a single letter: R, P, or S
+
+Page content: {body}
+Questions: {questions_json}
+
+Respond with valid JSON only."""
+        }
+
+    else:
+        # Default strategy - only used when no role is specified
+        return {
+            "system": """You are participating in a multi-round Rock Paper Scissors experiment against another player. You will play multiple rounds and your goal is to maximize your total points. Always respond in valid JSON format only.""",
+            "analyze_page_q": """You are playing multi-round Rock Paper Scissors against another player.
 
 Game Rules:
 - Rock (R) beats Scissors (S)
@@ -31,61 +62,10 @@ Game Rules:
 Page content: {body}
 Questions: {questions_json}
 
+Make your choice using your best judgment for this Rock Paper Scissors game.
+
 Respond with valid JSON only."""
-    
-    # Role-specific modifications
-    if role == 'thinker':
-        # Strategic thinking role
-        role_addition = """
-        
-        STRATEGIC APPROACH:
-        To perform well in Rock Paper Scissors, it is useful to predict what the other player might choose and counter that choice.
-        
-        Key strategic considerations:
-        - Analyze your opponent's previous choices for patterns
-        - Consider psychological factors (do they repeat choices? do they avoid repeating?)
-        - Think about what they might expect you to do
-        - Use your knowledge of human behavior and game theory
-        
-        Your goal is to outthink your opponent by predicting their next move and choosing the counter-move."""
-        
-        analyze_addition = """
-
-STRATEGIC THINKING REQUIRED: To win, you should predict what your opponent will choose and select the move that beats it.
-
-Analyze any previous rounds and your opponent's patterns. Think strategically about what they might choose next.
-Use your strategic thinking to predict your opponent's next move and choose accordingly."""
-
-    elif role == 'non_thinker':
-        # Simple/natural play role
-        role_addition = """
-        
-        NATURAL APPROACH:
-        Play Rock Paper Scissors naturally as you normally would. Make choices that feel right to you without overthinking strategy.
-        
-        Simply choose Rock (R), Paper (P), or Scissors (S) as you would in a casual game.
-        Don't worry about complex strategies - just play intuitively."""
-        
-        analyze_addition = """
-
-Play naturally and intuitively. Choose Rock (R), Paper (P), or Scissors (S) as you would in a casual game.
-Make your choice naturally without overthinking."""
-
-    else:
-        # Default - balanced approach (similar to non_thinker but neutral)
-        role_addition = """
-        
-        BALANCED APPROACH:
-        Play Rock Paper Scissors using your best judgment. Consider the game situation and make reasonable choices."""
-        
-        analyze_addition = """
-
-Make your choice using your best judgment for this Rock Paper Scissors game."""
-
-    return {
-        "system": base_system + role_addition,
-        "analyze_page_q": base_analyze + analyze_addition
-    }
+        }
 
 
 def get_available_roles():
@@ -95,7 +75,7 @@ def get_available_roles():
     Returns:
         list: List of available role names
     """
-    return ['non_thinker', 'thinker']
+    return ['P2', 'P3c', 'P4']
 
 
 def get_role_description(role):
@@ -109,7 +89,8 @@ def get_role_description(role):
         str: Human-readable description
     """
     descriptions = {
-        'non_thinker': 'Natural play - choose intuitively without complex strategy',
-        'thinker': 'Strategic play - analyze opponent patterns and predict their moves'
+        'P2': 'Detailed payoff explanation with explicit scoring structure',
+        'P3c': 'Strategic emphasis with randomization advice and optimal strategy guidance',
+        'P4': 'Clear points explanation with strategic framing and outcome focus'
     }
     return descriptions.get(role, f'Unknown role: {role}')
