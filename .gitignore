@@ -17,7 +17,6 @@ _bots*s
 __temp*
 __pycache__/
 *.py[cod]
-botex_data/
 data/
 
 # IDE and Editor Files
@@ -41,8 +40,8 @@ test/
 # Data and scripts
 Rmd/
 data/
+botex_data/
 output/
-experiment_results/
 .Rproj.user
 
 # Models
