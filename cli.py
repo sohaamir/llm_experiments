@@ -295,8 +295,8 @@ Examples:
     # === OUTPUT CONTROL ===
     parser.add_argument(
         "-o", "--output-dir", 
-        default="experiment_results",
-        help="Directory for storing experiment output (default: experiment_results)"
+        default="botex_data",
+        help="Directory for storing experiment output (default: botex_data)"
     )
 
     # === MODEL PARAMETERS ===
@@ -308,7 +308,7 @@ Examples:
     )
 
     parser.add_argument(
-        "--temperature", 
+        "-t", "--temperature", 
         type=float, 
         default=0.7,
         help="Model temperature for response randomness (default: 0.7)"

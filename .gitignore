@@ -42,6 +42,7 @@ test/
 Rmd/
 data/
 output/
+experiment_results/
 .Rproj.user
 
 # Models
