@@ -1,11 +1,15 @@
 from otree.api import *
 import random
 
-author = 'Multi-App Framework'
+author = 'Aamir Sohail'
 
 doc = """
 Rock Paper Scissors one-shot game with multiple prompting strategies for LLM bots.
 Players play a single round against a randomly-choosing opponent.
+
+Bots can be configured to use different LLMs (player_models.csv) and prompting strategies (prompts.py).
+
+Prompting strategies taken from Vidler and Walsh (2025) https://arxiv.org/pdf/2503.02582
 """
 
 class C(BaseConstants):
@@ -96,6 +100,14 @@ class Choice(Page):
     """Page where player makes their Rock Paper Scissors choice"""
     form_model = 'player'
     form_fields = ['choice']
+
+    @staticmethod
+    def vars_for_template(player):
+        return {
+            'win_payoff': C.WIN_PAYOFF,
+            'lose_payoff': C.LOSE_PAYOFF,
+            'tie_payoff': C.TIE_PAYOFF
+        }
     
     @staticmethod
     def before_next_page(player, timeout_happened):
@@ -127,4 +139,4 @@ class Results(Page):
         }
 
 
-page_sequence = [Instructions, Choice, Results]
+page_sequence = [Choice, Results]
