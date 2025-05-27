@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-cli.py - Command line interface and configuration for social influence task experiments
+cli.py - Command line interface and configuration for multi-app experiments
 
 This module handles argument parsing, configuration validation, and orchestration
-of experiment execution using the experiment.py module.
+of experiment execution with app-specific configurations and per-player role assignments.
 """
 
 import argparse
@@ -28,7 +28,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler()]
 )
-logger = logging.getLogger("sit_cli")
+logger = logging.getLogger("multi_app_cli")
 
 # Custom log filter to exclude noisy HTTP request logs
 class LogFilter(logging.Filter):
@@ -52,7 +52,7 @@ def get_available_models():
     available_models = {}
     
     # Gemini models
-    google_models_str = os.environ.get('GOOGLE_MODELS', 'gemini-1.5-flash')  # Default fallback
+    google_models_str = os.environ.get('GOOGLE_MODELS', 'gemini-1.5-flash')
     google_models = [m.strip() for m in google_models_str.split(',') if m.strip()]
     for model in google_models:
         model_name = model.strip()
@@ -98,7 +98,7 @@ def get_available_models():
                 'api_key_env': 'GROQ_API_KEY'
             }
 
-    # In get_available_models() function, add:
+    # DeepSeek models
     deepseek_models_str = os.environ.get('DEEPSEEK_MODELS', '')
     if deepseek_models_str:
         deepseek_models = [m.strip() for m in deepseek_models_str.split(',') if m.strip()]
@@ -125,29 +125,45 @@ def get_available_models():
     return available_models
 
 
-def load_model_mapping(file_path):
+def get_app_specific_model_mapping(app_name):
     """
-    Load player-model mapping from a CSV file.
+    Load app-specific player-model mapping with optional role assignments from CSV file.
     
     Args:
-        file_path (str): Path to the CSV file
+        app_name (str): Name of the app (e.g., 'rps', 'rps_repeat')
         
     Returns:
-        tuple: (player_models dict, is_human list, total_participants) or (None, None, 0) if file not found
+        tuple: (player_models dict, player_roles dict, is_human list, total_participants) or (None, None, None, 0) if file not found
     """
-    if not os.path.exists(file_path):
-        logger.error(f"Model mapping file not found at {file_path}")
-        return None, None, 0
+    app_dir = Path(app_name)
+    file_path = app_dir / "player_models.csv"
+    
+    if not file_path.exists():
+        logger.error(f"App-specific model mapping file not found at {file_path}")
+        return None, None, None, 0
         
     player_models = {}
+    player_roles = {}
     participant_assignments = []
     
     try:
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames
+            
+            # Check if role column exists
+            has_role_column = 'role' in fieldnames
+            
             for row in reader:
                 player_id = int(row['player_id'])
                 model_name = row['model_name'].strip()
+                
+                # Handle role assignment (optional column)
+                role = None
+                if has_role_column and row.get('role'):
+                    role = row['role'].strip()
+                    if role:  # Only assign if not empty
+                        player_roles[player_id] = role
                 
                 participant_assignments.append((player_id, model_name))
                 player_models[player_id] = model_name
@@ -161,12 +177,14 @@ def load_model_mapping(file_path):
         total_participants = len(participant_assignments)
         
         logger.info(f"Loaded {total_participants} participant assignments from {file_path}")
+        if player_roles:
+            logger.info(f"Found role assignments for players: {list(player_roles.keys())}")
         
-        return player_models, is_human_list, total_participants
+        return player_models, player_roles, is_human_list, total_participants
         
     except Exception as e:
         logger.error(f"Error loading model mapping: {str(e)}")
-        return None, None, 0
+        return None, None, None, 0
 
 
 def validate_player_models(player_models, available_models):
@@ -194,34 +212,76 @@ def validate_player_models(player_models, available_models):
     return True, None
 
 
+def get_available_apps():
+    """
+    Get list of available oTree apps by checking for directories with __init__.py and player_models.csv
+    
+    Returns:
+        list: List of available app names
+    """
+    available_apps = []
+    current_dir = Path('.')
+    
+    for item in current_dir.iterdir():
+        if item.is_dir() and not item.name.startswith('.') and not item.name.startswith('_'):
+            # Check if it's a valid oTree app (has __init__.py and player_models.csv)
+            if (item / '__init__.py').exists() and (item / 'player_models.csv').exists():
+                available_apps.append(item.name)
+    
+    return sorted(available_apps)
+
+
 def parse_arguments():
     """Parse command line arguments with comprehensive help and validation"""
     
     parser = argparse.ArgumentParser(
         description="""
-Run Social Influence Task experiments with LLM bots using botex.
+Run multi-app experiments with LLM bots using botex.
 
-This script automatically loads participant and model assignments from a CSV file,
-eliminating the need to specify models, participant counts, or human/bot ratios
-via command line arguments.
+This script automatically detects available oTree apps and loads app-specific
+participant, model, and role assignments from each app's player_models.csv file.
+
+Player roles are now assigned per-participant in the CSV file:
+  player_id,model_name,role
+  1,human,thinker
+  2,gemini-1.5-flash,non_thinker
+  3,claude-3-haiku,
 
 Examples:
-  # Run a single session with default settings
-  python run.py --sessions 1
+  # List available apps
+  python run.py --list-apps
   
-  # Run multiple sessions with custom token limit
-  python run.py --sessions 3 -m 1024
+  # Run single session with specific app
+  python run.py --app rps --sessions 1
   
-  # Run with custom CSV file and specific questionnaire role
-  python run.py --sessions 2 --model-mapping custom_players.csv -q patient
+  # Run multiple sessions with per-player role assignments
+  python run.py --app rps_repeat --sessions 3
   
-  # Validate configuration without running
-  python run.py --validate-only
-  
-  # Run with detailed logging and custom output directory
-  python run.py --sessions 1 --verbose --output-dir results/pilot_study
+  # Validate app configuration
+  python run.py --app rps_repeat --validate-only
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    # === APP SELECTION ===
+    parser.add_argument(
+        "-a", "--app", 
+        required=False,
+        help="""Name of the oTree app to run.
+        
+        Each app must have:
+        - __init__.py (oTree app definition)
+        - player_models.csv (participant assignments with optional roles)
+        - prompts.py (app-specific prompting strategies)
+        
+        Use --list-apps to see available apps.
+        """
+    )
+
+    parser.add_argument(
+        "--list-apps", 
+        action="store_true",
+        help="List all available oTree apps and exit"
     )
 
     # === ESSENTIAL ARGUMENTS ===
@@ -229,384 +289,126 @@ Examples:
         "-s", "--sessions", 
         type=int, 
         default=1,
-        help="""Number of concurrent experimental sessions to run.
-        
-        Each session creates an independent oTree session with participants as defined 
-        in the model mapping CSV. Sessions run in parallel when > 1.
-        
-        Values: Any positive integer
-        Default: 1
-        Use cases:
-          -s 1     # Single session for testing/piloting
-          -s 5     # Multiple sessions for data collection
-          -s 10    # Large-scale data collection
-        """
-    )
-
-    parser.add_argument(
-        "--model-mapping", 
-        default="player_models.csv",
-        help="""Path to CSV file defining participant-model assignments.
-        
-        CSV format: player_id,model_name
-        - player_id: Integer position (1, 2, 3, ...)
-        - model_name: Either 'human' or a model identifier
-        
-        Supported models:
-          'human'                    # Human participant
-          'gemini-1.5-flash'        # Google Gemini (fast)
-          'gemini-1.5-pro'          # Google Gemini (advanced)
-          'gpt-4o-mini'             # OpenAI GPT-4o Mini
-          'gpt-4o'                  # OpenAI GPT-4o
-          'claude-3-haiku'          # Anthropic Claude Haiku (fast)
-          'claude-3-sonnet'         # Anthropic Claude Sonnet
-          'claude-3-opus'           # Anthropic Claude Opus (advanced)
-          'tinyllama'               # Local TinyLLaMA model
-        
-        Default: player_models.csv
-        Use cases:
-          --model-mapping pilot_study.csv      # Custom pilot configuration
-          --model-mapping all_bots.csv         # Bot-only sessions
-          --model-mapping mixed_models.csv     # Multi-model comparison
-        """
-    )
-
-    # === CONFIGURATION FILES ===
-    parser.add_argument(
-        "-c", "--config", 
-        default="botex.env",
-        help="""Path to environment configuration file.
-        
-        Contains API keys, model settings, and oTree configuration.
-        See botex.env.example for required variables.
-        
-        Default: botex.env
-        Use cases:
-          -c production.env    # Production API keys
-          -c testing.env       # Testing/development setup
-          -c local.env         # Local-only models
-        """
+        help="Number of concurrent experimental sessions to run (default: 1)"
     )
 
     # === OUTPUT CONTROL ===
     parser.add_argument(
         "-o", "--output-dir", 
-        default="botex_data",
-        help="""Directory for storing experiment output.
-        
-        Creates subdirectories for each session containing:
-        - oTree data (wide and normalized CSV)
-        - Botex conversation logs and responses
-        - Experiment summary and metadata
-        
-        Default: botex_data
-        Use cases:
-          -o results/study1           # Organized by study
-          -o /shared/experiments      # Shared storage
-          -o output_$(date +%%Y%%m%%d)  # Date-stamped folders
-        """
+        default="experiment_results",
+        help="Directory for storing experiment output (default: experiment_results)"
     )
 
     # === MODEL PARAMETERS ===
     parser.add_argument(
         "-m", "--max-tokens", 
         type=int, 
-        default=None,
-        help="""Maximum tokens for LLM responses.
-        
-        Higher values allow more detailed reasoning but increase costs.
-        Some models have specific limits.
-        
-        Recommended values:
-          256-512     # TinyLLaMA (local models)
-          1024-2048   # Most API models (balanced)
-          4096        # Complex reasoning tasks
-        
-        Default: Model-specific (from botex.env)
-        Use cases:
-          -m 512     # Cost-conscious experiments
-          -m 2048    # Standard social tasks
-          -m 4096    # Complex decision tasks
-        """
+        default=1024,
+        help="Maximum tokens for LLM responses (default: 1024)"
     )
 
     parser.add_argument(
         "--temperature", 
         type=float, 
-        default=None,
-        help="""Model temperature for response randomness.
-        
-        Lower values = more consistent/predictable responses
-        Higher values = more varied/creative responses
-        
-        Values: 0.0 to 2.0
-          0.0-0.3   # Highly consistent responses
-          0.5-0.8   # Balanced (recommended for social tasks)
-          1.0-2.0   # High variability
-        
-        Default: 0.7
-        Use cases:
-          --temperature 0.1    # Reproducible responses
-          --temperature 0.7    # Natural social behavior
-          --temperature 1.2    # Explore response diversity
-        """
-    )
-
-    # === EXPERIMENT DESIGN ===
-    parser.add_argument(
-        "-q", "--q-role", 
-        default="none",
-        choices=["none", "typical", "patient"],
-        help="""Role assignment for questionnaire responses.
-        
-        Affects how bots respond to psychological questionnaires/scales.
-        
-        Options:
-          'none'     # No specific role instructions
-          'typical'  # Neurotypical/healthy individual responses
-          'patient'  # Responses reflecting psychological difficulties
-        
-        Default: none
-        Use cases:
-          -q typical     # Healthy population simulation
-          -q patient     # Clinical population simulation
-          -q none        # Pure task behavior (no questionnaires)
-        """
-    )
-
-    parser.add_argument(
-        "--session-config", 
-        default="social_influence_task",
-        help="""oTree session configuration name.
-        
-        Must match a configuration defined in settings.py.
-        Different configs can run different experimental variants.
-        
-        Default: social_influence_task
-        Use cases:
-          --session-config social_influence_task    # Standard version
-          --session-config social_influence_short   # Shortened version
-          --session-config pilot_version            # Pilot configuration
-        """
+        default=0.7,
+        help="Model temperature for response randomness (default: 0.7)"
     )
 
     # === TECHNICAL SETTINGS ===
     parser.add_argument(
         "--otree-url", 
         default="http://localhost:8000",
-        help="""oTree server URL.
-        
-        Use localhost for local development, or specify remote server.
-        Must be accessible from where bots are running.
-        
-        Default: http://localhost:8000
-        Use cases:
-          --otree-url http://localhost:8000        # Local development
-          --otree-url https://myserver.com:8000    # Remote server
-          --otree-url http://192.168.1.100:8000    # Network server
-        """
-    )
-
-    parser.add_argument(
-        "--botex-db", 
-        default="botex.sqlite3",
-        help="""Base name for botex SQLite database files.
-        
-        Actual files will be session-specific with timestamps.
-        Stores LLM conversation logs and response data.
-        
-        Default: botex.sqlite3
-        Use cases:
-          --botex-db experiment1.sqlite3    # Experiment-specific naming
-          --botex-db /data/botex.sqlite3     # Custom storage location
-        """
+        help="oTree server URL (default: http://localhost:8000)"
     )
 
     parser.add_argument(
         "-x", "--no-throttle", 
         action="store_true",
-        help="""Disable API request throttling.
-        
-        By default, botex throttles requests to avoid rate limits.
-        Disabling may cause failures with free API tiers.
-        
-        Default: False (throttling enabled)
-        Use cases:
-          -x    # When using paid API tiers with high limits
-        """
+        help="Disable API request throttling"
     )
 
     # === VALIDATION AND TESTING ===
     parser.add_argument(
         "--validate-only", 
         action="store_true",
-        help="""Validate configuration without running experiments.
-        
-        Checks:
-        - CSV file format and model availability
-        - API keys and model access
-        - oTree configuration
-        - File permissions and paths
-        
-        Use cases:
-          --validate-only    # Test setup before running
-        """
+        help="Validate app configuration without running experiments"
     )
 
     parser.add_argument(
         "--dry-run", 
         action="store_true",
-        help="""Show what would be executed without running.
-        
-        Displays:
-        - Participant assignments from CSV
-        - Model configurations
-        - Session parameters
-        - Output locations
-        
-        Use cases:
-          --dry-run    # Preview experiment setup
-        """
+        help="Show what would be executed without running"
     )
 
-    # === DEBUGGING AND MONITORING ===
+    # === DEBUGGING ===
     parser.add_argument(
         "-v", "--verbose", 
         action="store_true",
-        help="""Enable detailed logging output.
-        
-        Shows:
-        - Bot conversation details
-        - API request/response info
-        - oTree session progress
-        - Detailed error messages
-        
-        Default: False
-        Use cases:
-          -v    # Debugging experiments
-          -v    # Monitoring long-running sessions
-        """
+        help="Enable detailed logging output"
     )
 
     parser.add_argument(
         "--no-browser", 
         action="store_true",
-        help="""Disable automatic browser opening.
-        
-        By default, opens session monitor in browser automatically.
-        Useful for headless/automated execution.
-        
-        Default: False (browser opens automatically)
-        Use cases:
-          --no-browser    # Server/automated execution
-          --no-browser    # Multiple sessions (avoid browser spam)
-        """
-    )
-
-    # === EXPERIMENTAL CONTROL ===
-    parser.add_argument(
-        "--wait-timeout", 
-        type=int, 
-        default=7200,  # 2 hours
-        help="""Timeout in seconds for waiting for human participants.
-        
-        How long to wait for human participants to complete.
-        Affects mixed human-bot sessions.
-        
-        Values: Time in seconds
-          1800    # 30 minutes
-          3600    # 1 hour  
-          7200    # 2 hours (default)
-          0       # No timeout (wait indefinitely)
-        
-        Default: 7200 (2 hours)
-        Use cases:
-          --wait-timeout 1800    # Quick pilot sessions
-          --wait-timeout 0       # Flexible timing
-        """
-    )
-
-    parser.add_argument(
-        "--experiment-name", 
-        default=None,
-        help="""Custom name for this experiment run.
-        
-        Added to output files and summary reports.
-        Useful for organizing multiple experiment variants.
-        
-        Use cases:
-          --experiment-name pilot_study_v1    # Version tracking
-          --experiment-name condition_A       # Experimental conditions
-          --experiment-name replication_1     # Replication studies
-        """
-    )
-
-    parser.add_argument(
-        "--notes", 
-        default="",
-        help="""Additional notes about this experiment run.
-        
-        Added to experiment summary files.
-        Useful for documenting experimental conditions or hypotheses.
-        
-        Use cases:
-          --notes "Testing new prompt strategy"
-          --notes "Baseline condition for comparison"
-          --notes "Pilot run before main data collection"
-        """
-    )
-
-    # === LOCAL MODEL SETTINGS ===
-    local_group = parser.add_argument_group('Local Model Settings (TinyLLaMA)')
-    
-    local_group.add_argument(
-        "--model-path", 
-        default=None,
-        help="""Path to local model file for TinyLLaMA.
-        
-        Only needed if using local models and not set in botex.env.
-        Should point to a .gguf format model file.
-        
-        Use cases:
-          --model-path models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
-          --model-path /shared/models/custom_model.gguf
-        """
-    )
-
-    local_group.add_argument(
-        "--server-path", 
-        default=None,
-        help="""Path to llama.cpp server executable.
-        
-        Only needed if using local models and not set in botex.env.
-        
-        Use cases:
-          --server-path ./llama_server
-          --server-path /usr/local/bin/llama-server
-        """
+        help="Disable automatic browser opening"
     )
 
     args = parser.parse_args()
     
-    # Load environment configuration
-    if os.path.exists(args.config):
-        load_dotenv(args.config)
-        logger.info(f"Loaded configuration from {args.config}")
-    else:
-        logger.warning(f"Configuration file {args.config} not found, using environment variables")
-
-    # Set defaults from environment if not specified
-    if args.max_tokens is None:
-        args.max_tokens = int(os.environ.get("MAX_TOKENS_DEFAULT", "1024"))
+    # Handle listing apps
+    if args.list_apps:
+        apps = get_available_apps()
+        print("\nAvailable oTree Apps:")
+        print("=" * 40)
+        if apps:
+            for app in apps:
+                app_dir = Path(app)
+                try:
+                    # Try to get basic info about the app
+                    model_file = app_dir / "player_models.csv"
+                    if model_file.exists():
+                        with open(model_file, 'r') as f:
+                            reader = csv.DictReader(f)
+                            participants = list(reader)
+                            participant_count = len(participants)
+                            
+                            # Check for role assignments
+                            has_roles = any('role' in row and row['role'].strip() for row in participants)
+                            role_info = " (with roles)" if has_roles else ""
+                            
+                        print(f"  {app:<15} ({participant_count} participants{role_info})")
+                    else:
+                        print(f"  {app:<15} (configuration incomplete)")
+                except:
+                    print(f"  {app:<15} (configuration error)")
+        else:
+            print("  No apps found.")
+            print("\n  To create an app, ensure it has:")
+            print("  - __init__.py (oTree app definition)")
+            print("  - player_models.csv (participant assignments)")
+            print("  - prompts.py (prompting strategies)")
+        print()
+        sys.exit(0)
     
-    if args.temperature is None:
-        args.temperature = 0.7
+    # Validate app selection
+    if not args.app:
+        available_apps = get_available_apps()
+        if not available_apps:
+            print("ERROR: No apps found. Use --list-apps to see requirements.")
+            sys.exit(1)
+        
+        print(f"ERROR: Must specify an app. Available apps: {', '.join(available_apps)}")
+        print("Use --list-apps for more details.")
+        sys.exit(1)
     
-    # Set model paths from environment if not specified
-    if args.model_path is None:
-        args.model_path = os.environ.get("LLAMACPP_LOCAL_LLM_PATH")
+    # Validate selected app exists
+    available_apps = get_available_apps()
+    if args.app not in available_apps:
+        print(f"ERROR: App '{args.app}' not found.")
+        if available_apps:
+            print(f"Available apps: {', '.join(available_apps)}")
+        else:
+            print("No apps found. Use --list-apps for requirements.")
+        sys.exit(1)
     
-    if args.server_path is None:
-        args.server_path = os.environ.get("LLAMACPP_SERVER_PATH")
-
     return args

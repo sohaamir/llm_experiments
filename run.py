@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
 """
-run.py - Main script for running Social Influence Task experiments
+run.py - Main script for running multi-app experiments
 
-This script orchestrates the entire experiment workflow by using:
-- cli.py for argument parsing and configuration management
-- experiment.py for actual experiment execution
-
-Usage:
-    python run.py --sessions 1 --max-tokens 2048
-    python run.py --sessions 3 --model-mapping custom_players.csv --q-role patient
-    python run.py --validate-only
-    python run.py --dry-run
+This script orchestrates the entire experiment workflow using app-specific configurations
+with per-player role assignments.
 """
-# Import the instructor patch for Groq models
-# import groq_instructor_patch
-
-# Import the DeepSeek patch
-# import deepseek_patch
 
 import sys
 import os
@@ -26,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Import configuration and CLI functions
 from cli import (
     parse_arguments,
-    load_model_mapping,
+    get_app_specific_model_mapping,
     get_available_models,
     validate_player_models
 )
@@ -40,7 +28,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler()]
 )
-logger = logging.getLogger("sit_runner")
+logger = logging.getLogger("multi_app_runner")
 
 
 def validate_environment():
@@ -54,20 +42,20 @@ def validate_environment():
         return False
 
 
-def display_configuration_summary(args, player_models, human_participants, bot_participants):
+def display_configuration_summary(args, player_models, player_roles, human_participants, bot_participants):
     """Display a comprehensive configuration summary"""
     unique_models = set(model for model in player_models.values() if model.lower() != 'human')
+    unique_roles = set(player_roles.values()) if player_roles else set()
     
     print(f"""
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                           EXPERIMENT CONFIGURATION                          ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║ Model mapping file: {args.model_mapping:<56} ║
-║ Total participants: {args.participants:<56} ║
+║ App:                {args.app:<56} ║
+║ Total participants: {len(player_models):<56} ║
 ║ Human participants: {human_participants:<56} ║
 ║ Bot participants:   {bot_participants:<56} ║
 ║ Sessions to run:    {args.sessions:<56} ║
-║ Questionnaire role: {args.q_role:<56} ║
 ║ Max tokens:         {args.max_tokens:<56} ║
 ║ Temperature:        {args.temperature:<56} ║
 ║ Output directory:   {args.output_dir:<56} ║
@@ -81,69 +69,111 @@ def display_configuration_summary(args, player_models, human_participants, bot_p
     else:
         print("Models in use: None (humans only)")
     
+    if unique_roles:
+        print(f"\nRoles assigned:")
+        for role in sorted(unique_roles):
+            players_with_role = [str(pid) for pid, prole in player_roles.items() if prole == role]
+            print(f"  • {role}: players {', '.join(players_with_role)}")
+    else:
+        print("\nRoles assigned: None (default prompts only)")
+    
     print()
 
 
-def display_participant_assignments(player_models, available_models):
+def display_participant_assignments(player_models, player_roles, available_models):
     """Display detailed participant assignments"""
     print("Participant Assignments:")
-    print("-" * 50)
+    print("-" * 60)
     
     for player_id in sorted(player_models.keys()):
         model_name = player_models[player_id]
+        role = player_roles.get(player_id, 'default') if player_roles else 'default'
+        
         if model_name.lower() == "human":
-            print(f"  Player {player_id}: HUMAN")
+            print(f"  Player {player_id}: HUMAN (role: {role})")
         else:
             if model_name in available_models:
                 provider = available_models[model_name]['provider']
-                print(f"  Player {player_id}: {model_name} ({provider})")
+                print(f"  Player {player_id}: {model_name} ({provider}, role: {role})")
             else:
-                print(f"  Player {player_id}: {model_name} (UNKNOWN PROVIDER)")
+                print(f"  Player {player_id}: {model_name} (UNKNOWN PROVIDER, role: {role})")
 
 
-def handle_dry_run(args, player_models, available_models):
+def handle_dry_run(args, player_models, player_roles, available_models):
     """Handle dry run mode"""
     print("\n" + "="*60)
     print("                    DRY RUN MODE")
     print("="*60)
     
-    display_participant_assignments(player_models, available_models)
+    display_participant_assignments(player_models, player_roles, available_models)
     
     print(f"\nExperiment would run with:")
+    print(f"  • App: {args.app}")
     print(f"  • {args.sessions} session(s)")
-    print(f"  • {args.participants} participants per session")
+    print(f"  • {len(player_models)} participants per session")
     print(f"  • Output directory: {args.output_dir}")
     print(f"  • oTree URL: {args.otree_url}")
     
-    if hasattr(args, 'experiment_name') and args.experiment_name:
-        print(f"  • Experiment name: {args.experiment_name}")
-    
-    if hasattr(args, 'notes') and args.notes:
-        print(f"  • Notes: {args.notes}")
+    if player_roles:
+        unique_roles = set(player_roles.values())
+        print(f"  • Per-player roles: {', '.join(sorted(unique_roles))}")
     
     print(f"\nTo execute this configuration, run without --dry-run")
     return True
 
 
-def handle_validation_only(args, player_models, available_models):
+def handle_validation_only(args, player_models, player_roles, available_models):
     """Handle validation-only mode"""
     print("\n" + "="*60)
     print("                 VALIDATION MODE")
     print("="*60)
     
     checks_passed = 0
-    total_checks = 5
+    total_checks = 6
     
-    # Check 1: Model mapping file exists and is valid
-    print("1. Model mapping file validation...")
-    if player_models:
-        print("   ✓ Model mapping file loaded successfully")
+    # Check 1: App configuration
+    print("1. App configuration validation...")
+    app_dir = os.path.join(args.app)
+    required_files = ['__init__.py', 'player_models.csv', 'prompts.py']
+    missing_files = [f for f in required_files if not os.path.exists(os.path.join(app_dir, f))]
+    
+    if not missing_files:
+        print("   ✓ App configuration is complete")
         checks_passed += 1
     else:
-        print("   ✗ Model mapping file validation failed")
+        print(f"   ✗ Missing files in app '{args.app}': {', '.join(missing_files)}")
     
-    # Check 2: All models are available
-    print("2. Model availability check...")
+    # Check 2: Model mapping validation
+    print("2. Model mapping validation...")
+    if player_models:
+        print("   ✓ Model mapping loaded successfully")
+        checks_passed += 1
+    else:
+        print("   ✗ Model mapping validation failed")
+    
+    # Check 3: Role validation
+    print("3. Role assignment validation...")
+    if player_roles:
+        from experiment import get_available_app_roles
+        available_roles = get_available_app_roles(args.app)
+        
+        if available_roles:
+            invalid_roles = [role for role in player_roles.values() if role not in available_roles]
+            if not invalid_roles:
+                print(f"   ✓ All assigned roles are valid for app '{args.app}'")
+                checks_passed += 1
+            else:
+                print(f"   ✗ Invalid roles found: {invalid_roles}")
+                print(f"     Valid roles for {args.app}: {available_roles}")
+        else:
+            print(f"   ⚠ Could not determine valid roles for app '{args.app}', but roles are assigned")
+            checks_passed += 1  # Don't fail for this
+    else:
+        print("   ✓ No specific roles assigned - will use default prompts")
+        checks_passed += 1
+    
+    # Check 4: All models are available
+    print("4. Model availability check...")
     is_valid, error_msg = validate_player_models(player_models, available_models)
     if is_valid:
         print("   ✓ All assigned models are available")
@@ -151,8 +181,8 @@ def handle_validation_only(args, player_models, available_models):
     else:
         print(f"   ✗ Model validation failed: {error_msg}")
     
-    # Check 3: Environment configuration
-    print("3. Environment configuration check...")
+    # Check 5: Environment configuration
+    print("5. Environment configuration check...")
     config_issues = []
     
     # Check for required API keys based on models used
@@ -173,8 +203,8 @@ def handle_validation_only(args, player_models, available_models):
         for issue in config_issues:
             print(f"     - {issue}")
     
-    # Check 4: Output directory permissions
-    print("4. Output directory check...")
+    # Check 6: Output directory permissions
+    print("6. Output directory check...")
     try:
         os.makedirs(args.output_dir, exist_ok=True)
         test_file = os.path.join(args.output_dir, ".test_write")
@@ -186,11 +216,6 @@ def handle_validation_only(args, player_models, available_models):
     except Exception as e:
         print(f"   ✗ Output directory issue: {str(e)}")
     
-    # Check 5: Dependencies
-    print("5. Dependencies check...")
-    if validate_environment():
-        checks_passed += 1
-    
     print(f"\nValidation Summary: {checks_passed}/{total_checks} checks passed")
     
     if checks_passed == total_checks:
@@ -201,13 +226,13 @@ def handle_validation_only(args, player_models, available_models):
         return False
 
 
-def run_multiple_sessions(args, player_models, is_human_list, available_models):
+def run_multiple_sessions(args, player_models, player_roles, is_human_list, available_models):
     """Run multiple sessions concurrently"""
     print(f"\nStarting {args.sessions} concurrent sessions...")
     
     with ThreadPoolExecutor(max_workers=args.sessions) as executor:
         futures = [
-            executor.submit(run_session, args, i+1, player_models, is_human_list, available_models) 
+            executor.submit(run_session, args, i+1, player_models, player_roles, is_human_list, available_models) 
             for i in range(args.sessions)
         ]
         
@@ -252,8 +277,8 @@ def main():
     
     print("""
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                      SOCIAL INFLUENCE TASK EXPERIMENT                       ║
-║                           with LLM Bots (botex)                             ║
+║                           MULTI-APP EXPERIMENTS                             ║
+║                     with Per-Player Roles (botex)                           ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """)
     
@@ -274,38 +299,30 @@ def main():
         print("\nPlease install required dependencies and try again.")
         sys.exit(1)
     
-    # Load participant assignments from CSV - this is REQUIRED
-    if not os.path.exists(args.model_mapping):
-        logger.error(f"Model mapping file not found: {args.model_mapping}")
-        print(f"""
-ERROR: Model mapping file '{args.model_mapping}' not found.
-
-Please create a CSV file with the following format:
-player_id,model_name
-1,human
-2,gemini-1.5-flash
-3,claude-3-haiku
-
-Available models: human, gemini-1.5-flash, gemini-1.5-pro, gpt-4o-mini, gpt-4o, 
-                 claude-3-haiku, claude-3-sonnet, claude-3-opus, tinyllama
-""")
-        sys.exit(1)
-    
-    # Load model mapping
-    logger.info(f"Loading participant assignments from: {args.model_mapping}")
-    player_models, is_human_list, total_participants = load_model_mapping(args.model_mapping)
+    # Load app-specific participant assignments from CSV (now with roles)
+    logger.info(f"Loading participant assignments for app '{args.app}'")
+    player_models, player_roles, is_human_list, total_participants = get_app_specific_model_mapping(args.app)
     
     if player_models is None:
-        logger.error("Failed to load participant assignments")
+        logger.error(f"Failed to load participant assignments for app '{args.app}'")
+        print(f"""
+ERROR: Could not load participant assignments for app '{args.app}'.
+
+Please ensure the app has a valid player_models.csv file with format:
+player_id,model_name,role
+1,human,thinker
+2,gemini-1.5-flash,non_thinker
+3,claude-3-haiku,
+
+Note: The 'role' column is optional. If provided, it assigns per-player roles.
+
+Use --list-apps to see available apps.
+""")
         sys.exit(1)
     
     # Calculate derived values
     human_participants = sum(1 for is_human in is_human_list if is_human)
     bot_participants = total_participants - human_participants
-    
-    # Override args with values from CSV
-    args.participants = total_participants
-    args.humans = human_participants
     
     # Load available models from environment
     available_models = get_available_models()
@@ -321,15 +338,15 @@ Available models: human, gemini-1.5-flash, gemini-1.5-pro, gpt-4o-mini, gpt-4o,
         sys.exit(1)
     
     # Display configuration summary
-    display_configuration_summary(args, player_models, human_participants, bot_participants)
+    display_configuration_summary(args, player_models, player_roles, human_participants, bot_participants)
     
     # Handle special modes
     if hasattr(args, 'dry_run') and args.dry_run:
-        handle_dry_run(args, player_models, available_models)
+        handle_dry_run(args, player_models, player_roles, available_models)
         return
     
     if hasattr(args, 'validate_only') and args.validate_only:
-        success = handle_validation_only(args, player_models, available_models)
+        success = handle_validation_only(args, player_models, player_roles, available_models)
         sys.exit(0 if success else 1)
     
     # Create output directory
@@ -342,7 +359,7 @@ Available models: human, gemini-1.5-flash, gemini-1.5-pro, gpt-4o-mini, gpt-4o,
     
     # Display participant assignments for verification
     if bot_participants > 0:
-        display_participant_assignments(player_models, available_models)
+        display_participant_assignments(player_models, player_roles, available_models)
     
     # Start the experiment
     try:
@@ -358,8 +375,8 @@ Available models: human, gemini-1.5-flash, gemini-1.5-pro, gpt-4o-mini, gpt-4o,
             # Run sessions
             if args.sessions == 1:
                 # Run a single session
-                print(f"\nStarting single experimental session...")
-                result = run_session(args, 1, player_models, is_human_list, available_models)
+                print(f"\nStarting single experimental session for app '{args.app}'...")
+                result = run_session(args, 1, player_models, player_roles, is_human_list, available_models)
                 
                 if result["success"]:
                     print(f"\n✓ Session completed successfully!")
@@ -370,7 +387,7 @@ Available models: human, gemini-1.5-flash, gemini-1.5-pro, gpt-4o-mini, gpt-4o,
                     sys.exit(1)
             else:
                 # Run multiple sessions
-                success = run_multiple_sessions(args, player_models, is_human_list, available_models)
+                success = run_multiple_sessions(args, player_models, player_roles, is_human_list, available_models)
                 if not success:
                     sys.exit(1)
         
