@@ -1,0 +1,76 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+Round {{ round_number }} Results
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-{{ result_class }} text-white">
+        <h4>{{ result_text }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-6">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Your Choice</h5>
+                    </div>
+                    <div class="card-body">
+                        <h3>
+                            {% if player.choice == 'R' %}🪨{% elif player.choice == 'P' %}📄{% else %}✂️{% endif %}
+                        </h3>
+                        <h4>{{ my_choice }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>Opponent's Choice</h5>
+                    </div>
+                    <div class="card-body">
+                        <h3>
+                            {% if player.get_opponent.choice == 'R' %}🪨{% elif player.get_opponent.choice == 'P' %}📄{% else %}✂️{% endif %}
+                        </h3>
+                        <h4>{{ opponent_choice }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="alert alert-{{ result_class }}">
+                <h5 class="mb-2">{{ result_text }}</h5>
+                <p class="mb-0">You earned <strong>{{ my_payoff }}</strong> point(s) this round.</p>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6>Round {{ round_number }} of {{ total_rounds }}</h6>
+                        <p class="mb-0">Your total score: <strong>{{ total_payoff }}</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                {% if not is_final_round %}
+                <div class="alert alert-info mb-0">
+                    <strong>Next:</strong> Round {{ round_number|add:1 }}
+                </div>
+                {% else %}
+                <div class="alert alert-success mb-0">
+                    <strong>Game Complete!</strong> See final results.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% next_button %}
+{% endblock %}

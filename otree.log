@@ -1,3 +1,91 @@
-Open your browser to http://localhost:8000/
-To quit the server, press Control+C.
-
+Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 162, in run_asgi
+    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 45, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/applications.py", line 112, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/middleware/base.py", line 21, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/errorpage.py", line 214, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/middleware/base.py", line 21, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 75, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/patch.py", line 16, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/routing.py", line 582, in __call__
+    await route.handle(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/routing.py", line 299, in handle
+    await self.app(scope, receive, send)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/endpoints.py", line 74, in dispatch
+    raise exc from None
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/starlette/endpoints.py", line 68, in dispatch
+    await self.on_receive(websocket, data)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/channels/consumers.py", line 127, in on_receive
+    await self.post_receive_json(data, **self.cleaned_kwargs)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/channels/consumers.py", line 662, in post_receive_json
+    export_wide(fp)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/export.py", line 425, in export_wide
+    rows = get_rows_for_wide_csv(session_code=session_code)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/otree/export.py", line 245, in get_rows_for_wide_csv
+    ).scalar()
+      ^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3523, in scalar
+    ret = self.one()
+          ^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3490, in one
+    ret = self.one_or_none()
+          ^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3459, in one_or_none
+    ret = list(self)
+          ^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3535, in __iter__
+    return self._execute_and_instances(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 3560, in _execute_and_instances
+    result = conn.execute(querycontext.statement, self._params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1011, in execute
+    return meth(self, multiparams, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 298, in _execute_on_connection
+    return connection._execute_clauseelement(self, multiparams, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1124, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1316, in _execute_context
+    self._handle_dbapi_exception(
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1510, in _handle_dbapi_exception
+    util.raise_(
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1276, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 609, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: moral_inference_subsession
+[SQL: SELECT max(moral_inference_subsession.round_number) AS max_1 
+FROM moral_inference_subsession]
+(Background on this error at: http://sqlalche.me/e/13/e3q8)
+closing handshake failed
+Traceback (most recent call last):
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/server.py", line 244, in handler
+    await self.close()
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 755, in close
+    await self.write_close_frame(Close(code, reason))
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 1216, in write_close_frame
+    await self.write_frame(True, OP_CLOSE, data, _state=State.CLOSING)
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 1191, in write_frame
+    await self.drain()
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 1180, in drain
+    await self.ensure_open()
+  File "/Users/aamirsohail/University of Birmingham - ALPN Laboratory - Research - Projects/online_social_study/otree_projects/social-influence-task-botex/botexenv/lib/python3.11/site-packages/websockets/legacy/protocol.py", line 921, in ensure_open
+    raise self.connection_closed_exc()
+websockets.exceptions.ConnectionClosedError: sent 1000 (OK); no close frame received

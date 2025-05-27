@@ -1,7 +1,7 @@
 from otree.api import *
 import random
 
-author = 'Your Name'
+author = 'Multi-App Framework'
 
 doc = """
 Rock Paper Scissors one-shot game with multiple prompting strategies for LLM bots.
@@ -9,7 +9,7 @@ Players play a single round against a randomly-choosing opponent.
 """
 
 class C(BaseConstants):
-    NAME_IN_URL = 'rps'
+    NAME_IN_URL = 'rps_oneshot'
     PLAYERS_PER_GROUP = None  # Single player game
     NUM_ROUNDS = 1
     
@@ -20,18 +20,6 @@ class C(BaseConstants):
         ('S', 'Scissors')
     ]
     
-    # Prompt strategies
-    PROMPT_STRATEGIES = [
-        'P1',   # Base prompt
-        'P2r',  # Rock first
-        'P2p',  # Paper first
-        'P2s',  # Scissors first
-        'P3a',  # Classic reworded
-        'P3b',  # Added random
-        'P3c',  # Random + optimal
-        'P4'    # Clear points
-    ]
-    
     # Payoffs
     WIN_PAYOFF = 1
     LOSE_PAYOFF = 0
@@ -39,11 +27,7 @@ class C(BaseConstants):
 
 
 class Subsession(BaseSubsession):
-    def creating_session(self):
-        # Assign prompt strategies to players (can be customized)
-        for player in self.get_players():
-            # Default to P1, but can be overridden by session config
-            player.prompt_strategy = self.session.config.get('prompt_strategy', 'P1')
+    pass
 
 
 class Group(BaseGroup):
@@ -64,9 +48,6 @@ class Player(BasePlayer):
     # Game result
     result = models.StringField()  # 'win', 'lose', 'tie'
     points_earned = models.IntegerField(initial=0)
-    
-    # Prompt strategy used
-    prompt_strategy = models.StringField(choices=[(s, s) for s in C.PROMPT_STRATEGIES])
     
     def set_opponent_choice(self):
         """Randomly determine opponent's choice"""
@@ -91,10 +72,10 @@ class Player(BasePlayer):
             self.result = 'lose'
             self.points_earned = C.LOSE_PAYOFF
     
-    def get_choice_display(self, choice_letter):
-        """Convert choice letter to full name"""
+    def get_opponent_choice_display(self):
+        """Convert opponent choice letter to full name"""
         choice_map = {'R': 'Rock', 'P': 'Paper', 'S': 'Scissors'}
-        return choice_map.get(choice_letter, choice_letter)
+        return choice_map.get(self.opponent_choice, self.opponent_choice)
 
 
 # PAGES
@@ -131,8 +112,8 @@ class Results(Page):
     @staticmethod
     def vars_for_template(player):
         return {
-            'player_choice_display': player.get_choice_display(player.choice),
-            'opponent_choice_display': player.get_choice_display(player.opponent_choice),
+            'player_choice_display': player.get_choice_display(),  # Fixed: no arguments
+            'opponent_choice_display': player.get_opponent_choice_display(),
             'result_text': {
                 'win': 'You Win!',
                 'lose': 'You Lose!',
