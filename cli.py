@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-cli.py - Command line interface and configuration for multi-app experiments
+cli.py - Command line interface and configuration for LLM experiments
 
-This module handles argument parsing, configuration validation, and orchestration
-of experiment execution with app-specific configurations and per-player role assignments.
+Author: [Aamir Sohail)
 """
 
 import argparse
@@ -238,7 +237,7 @@ def parse_arguments():
         description="""
 Run multi-app experiments with LLM bots using botex.
 
-This script automatically detects available oTree apps and loads app-specific
+This method automatically detects available oTree apps and loads app-specific
 participant, model, and role assignments from each app's player_models.csv file.
 
 Player roles are now assigned per-participant in the CSV file:
@@ -249,13 +248,13 @@ Player roles are now assigned per-participant in the CSV file:
 
 Examples:
   # List available apps
-  >python run.py --list-apps>
+  <python run.py --list-apps>
   
   # Run single session with specific app
   <python run.py --app rps_repeat --sessions 1> or <python run.py -a rps_repeat -s 1>
   
   # Run multiple sessions with per-player role assignments
-  >python run.py --app rps_repeat --sessions 3>
+  <python run.py --app rps_repeat --sessions 3>
   
   # Validate app configuration
   <python run.py --app rps_repeat --validate-only>
