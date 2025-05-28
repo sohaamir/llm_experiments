@@ -63,61 +63,6 @@ def load_app_prompts(app_name, role=None):
                     logger.info(f"Loaded default prompts using get_prompts() for app '{app_name}'")
                 except Exception as e2:
                     logger.warning(f"get_prompts() failed for default: {e2}")
-        
-        # Strategy 2: Try app-specific function names by convention
-        if prompts is None:
-            # Try function named after the app: get_{app_name}_prompts
-            app_function_name = f"get_{app_name}_prompts"
-            if hasattr(prompts_module, app_function_name):
-                try:
-                    app_function = getattr(prompts_module, app_function_name)
-                    prompts = app_function(role)
-                    logger.info(f"Loaded prompts using {app_function_name}() for app '{app_name}' with role '{role or 'default'}'")
-                except Exception as e:
-                    logger.warning(f"{app_function_name}() failed for role '{role}': {e}")
-                    # Try without role
-                    try:
-                        prompts = app_function(None)
-                        logger.info(f"Loaded default prompts using {app_function_name}() for app '{app_name}'")
-                    except Exception as e2:
-                        logger.warning(f"{app_function_name}() failed for default: {e2}")
-        
-        # Strategy 3: Try common app-specific function names (for backwards compatibility)
-        if prompts is None:
-            app_specific_functions = [
-                'get_rps_prompts',        # For RPS variants
-                'get_rps_repeat_prompts', # For RPS repeat variants
-                'get_app_prompts',        # Generic alternative
-                'get_bot_prompts',        # Another common name
-            ]
-            
-            for func_name in app_specific_functions:
-                if hasattr(prompts_module, func_name):
-                    try:
-                        func = getattr(prompts_module, func_name)
-                        prompts = func(role)
-                        logger.info(f"Loaded prompts using {func_name}() for app '{app_name}' with role '{role or 'default'}'")
-                        break
-                    except Exception as e:
-                        logger.warning(f"{func_name}() failed for role '{role}': {e}")
-                        # Try without role
-                        try:
-                            prompts = func(None)
-                            logger.info(f"Loaded default prompts using {func_name}() for app '{app_name}'")
-                            break
-                        except Exception as e2:
-                            logger.warning(f"{func_name}() failed for default: {e2}")
-        
-        # Strategy 4: If we have a role but no prompts, try again without role
-        if prompts is None and role is not None:
-            logger.warning(f"Role '{role}' not found for app '{app_name}', trying without role")
-            return load_app_prompts(app_name, None)  # Recursive call without role
-        
-        if prompts is not None:
-            return prompts
-        else:
-            logger.error(f"No suitable prompts function found in {prompts_file}")
-            return None
             
     except Exception as e:
         logger.error(f"Error loading app prompts: {str(e)}")
@@ -127,7 +72,6 @@ def load_app_prompts(app_name, role=None):
 def get_available_app_roles(app_name):
     """
     Get list of available roles for an app by checking its prompts.py file.
-    Now works with any app using standard conventions.
     
     Args:
         app_name (str): Name of the app
@@ -156,28 +100,6 @@ def get_available_app_roles(app_name):
                 return available_roles
             except Exception as e:
                 logger.warning(f"get_available_roles() failed: {e}")
-        
-        # Strategy 2: Check for role description functions
-        role_desc_functions = [
-            'get_role_description',
-            'get_strategy_description',
-            f'get_{app_name}_roles'
-        ]
-        
-        for func_name in role_desc_functions:
-            if hasattr(prompts_module, func_name):
-                # This indicates the app has roles, but we can't automatically determine them
-                # Return empty list but log that roles exist
-                logger.info(f"App '{app_name}' has role descriptions ({func_name}) but roles must be determined from documentation")
-                break
-        
-        # Strategy 3: For specific known apps (backwards compatibility)
-        if app_name.startswith('rps') and not app_name.startswith('rps_repeat'):
-            # Single RPS variants
-            available_roles = ['P1', 'P2r', 'P2p', 'P2s', 'P3a', 'P3b', 'P3c', 'P4']
-        elif app_name.startswith('rps_repeat'):
-            # Multi-round RPS variants
-            available_roles = ['non_thinker', 'thinker']
         
         return available_roles
         
