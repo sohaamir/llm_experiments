@@ -5,11 +5,8 @@
 {% block content %}
     <div style="text-align: center;">
         <p>{{ body_text }}</p>
-        
-        <!-- Meta refresh to handle auto-refreshing for bots -->
-        <meta http-equiv="refresh" content="10">
-        
+
         <!-- Special indicator for bots -->
-        <div id="bot-wait-indicator" style="display: none;" data-waiting="true">Waiting for other players</div>
+        <div id="bot-wait-indicator" style="display: none;" data-waiting="true">Waiting for other players...</div>
     </div>
 {% endblock %}
