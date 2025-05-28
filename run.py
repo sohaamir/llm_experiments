@@ -2,8 +2,7 @@
 """
 run.py - Main script for running multi-app experiments
 
-This script orchestrates the entire experiment workflow using app-specific configurations
-with per-player role assignments.
+This script orchestrates the experiment workflow, hosting oTree experiments using botex.
 """
 
 import sys
@@ -102,7 +101,7 @@ def display_participant_assignments(player_models, player_roles, available_model
 def handle_dry_run(args, player_models, player_roles, available_models):
     """Handle dry run mode"""
     print("\n" + "="*60)
-    print("                    DRY RUN MODE")
+    print("DRY RUN MODE")
     print("="*60)
     
     display_participant_assignments(player_models, player_roles, available_models)

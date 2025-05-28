@@ -37,8 +37,18 @@ class C(BaseConstants):
 
 class Subsession(BaseSubsession):
     def creating_session(self):
-        # Group players into pairs
-        self.group_randomly()
+        # Use matrix grouping
+        if self.round_number == 1:
+            # Group players into pairs
+            matrix = []
+            players = self.get_players()
+            for i in range(0, len(players), 2):
+                if i + 1 < len(players):
+                    matrix.append([players[i], players[i + 1]])
+            self.set_group_matrix(matrix)
+        else:
+            # Keep same groups across rounds
+            self.group_like_round(1)
 
 
 class Group(BaseGroup):
@@ -85,6 +95,20 @@ class Player(BasePlayer):
     # Round result and payoff
     result = models.StringField()  # 'win', 'lose', 'tie'
     round_payoff = models.IntegerField(initial=0)
+
+    # Model assignment
+    model = models.StringField()  # Store the assigned model name
+    
+    # Simplified version of your method
+    def set_model_assignment(self):
+        """Set the model assignment based on player position"""
+        intended_model_key = f'player_{self.id_in_group}_intended_model'
+        if intended_model_key in self.session.config:
+            self.model = self.session.config[intended_model_key]
+        else:
+            self.model = "human"  # Default for human participants
+        
+        print(f"Player {self.id_in_group}: assigned model = {self.model}")
     
     def choice_display_text(self, choice_letter):
         """Convert choice letter to full name - renamed to avoid conflict with oTree's get_choice_display()"""
@@ -100,21 +124,35 @@ class Player(BasePlayer):
         return sum([p.round_payoff for p in self.in_all_rounds()])
     
     def get_round_history(self):
-        """Get history of choices and results for previous rounds"""
+        """Get history of choices and results for previous rounds with full choice names"""
         history = []
         for round_player in self.in_previous_rounds():
             opponent = round_player.get_opponent()
             history.append({
                 'round': round_player.round_number,
-                'my_choice': round_player.choice,
-                'opponent_choice': opponent.choice,
+                'my_choice': self.choice_display_text(round_player.choice),
+                'opponent_choice': self.choice_display_text(opponent.choice),
                 'my_result': round_player.result,
                 'my_payoff': round_player.round_payoff
             })
         return history
 
-
 # PAGES
+class GroupingWaitPage(WaitPage):
+    """Wait page to form groups of 2 players"""
+    group_by_arrival_time = False  # Changed to False for bot compatibility
+    title_text = "Forming Groups"
+    body_text = "Waiting for other players to join..."
+
+    @staticmethod
+    def after_all_players_arrive(group):
+        # Set model assignments for all players in the group
+        for player in group.get_players():
+            player.set_model_assignment()
+    
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == 1
 
 class Choice(Page):
     """Page where player makes their Rock Paper Scissors choice"""
@@ -134,10 +172,18 @@ class Choice(Page):
             'history': history,
             'has_history': len(history) > 0
         }
+    
+    def is_experiment_complete(self):
+        """Check if this player has completed all rounds"""
+        return (self.round_number == C.NUM_ROUNDS and 
+                hasattr(self, 'choice') and 
+                self.choice is not None)
 
 
 class WaitForPartner(WaitPage):
     """Wait for both players to make their choices"""
+    title_text = "Waiting for opponent"
+    body_text = "Waiting for other player to make their choice..."
     
     @staticmethod
     def after_all_players_arrive(group):
@@ -185,6 +231,12 @@ class FinalResults(Page):
         return player.round_number == C.NUM_ROUNDS
     
     @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        # Ensure experiment properly terminates
+        participant = player.participant
+        participant.finished = True
+    
+    @staticmethod
     def vars_for_template(player):
         opponent = player.get_opponent()
         
@@ -229,4 +281,4 @@ class FinalResults(Page):
         }
 
 
-page_sequence = [Choice, WaitForPartner, Results, FinalResults]
+page_sequence = [GroupingWaitPage, Choice, WaitForPartner, Results, FinalResults]

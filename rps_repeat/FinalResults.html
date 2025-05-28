@@ -6,17 +6,29 @@ Final Results
 {% endblock %}
 
 {% block content %}
-<h2>Game Complete</h2>
 
-<h3>Final Scores</h3>
-<p>Your Total Score: {{ my_total_payoff }}</p>
-<p>Opponent's Total Score: {{ opponent_total_payoff }}</p>
-<p>Overall Result: {{ overall_result_text }}</p>
+<div class="card mb-4">
+    <div class="card-header bg-{{ overall_result_class }} text-white">
+        <h4>Game Complete</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>Your Total Score:</strong> {{ my_total_payoff }}</p>
+        <p><strong>Opponent's Total Score:</strong> {{ opponent_total_payoff }}</p>
+        <p><strong>Overall Result:</strong> {{ overall_result_text }}</p>
+    </div>
+</div>
 
-<h3>Complete Game History</h3>
-{% for h in history %}
-<p>Round {{ h.round }}: You chose {{ h.my_choice }}, Opponent chose {{ h.opponent_choice }}, Result: {{ h.result }}, Points: {{ h.payoff }}</p>
-{% endfor %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h4>Complete Game History</h4>
+    </div>
+    <div class="card-body">
+        {% for h in history %}
+        <p>Round {{ h.round }}: You chose <strong>{{ h.my_choice }}</strong>, Opponent chose <strong>{{ h.opponent_choice }}</strong>, Result: <strong>{{ h.result }}</strong>, Points: <strong>{{ h.payoff }}</strong></p>
+        {% endfor %}
+    </div>
+</div>
 
 {% next_button %}
+
 {% endblock %}

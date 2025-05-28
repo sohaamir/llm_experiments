@@ -2,23 +2,39 @@
 {% load otree static %}
 
 {% block title %}
-Round {{ round_number }} - Make Your Choice
+Rock, Paper, Scissors - Round {{ round_number }} 
 {% endblock %}
 
 {% block content %}
-<h2>Round {{ round_number }} of {{ total_rounds }}</h2>
 
 {% if has_history %}
-<h3>Previous Rounds</h3>
-{% for h in history %}
-<p>Round {{ h.round }}: You chose {{ h.my_choice }}, Opponent chose {{ h.opponent_choice }}, Result: {{ h.my_result }}, Points: {{ h.my_payoff }}</p>
-{% endfor %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h4>Previous Rounds</h4>
+    </div>
+    <div class="card-body">
+        {% for h in history %}
+        <p>
+            <strong>Round {{ h.round }}:</strong><br>
+            You chose <strong>{{ h.my_choice }}</strong>, 
+            Opponent chose <strong>{{ h.opponent_choice }}</strong>, 
+            Result: <strong>{{ h.my_result }}</strong>, 
+            Points: <strong>{{ h.my_payoff }}</strong>
+        </p>
+        {% endfor %}
+    </div>
+</div>
 {% endif %}
 
-<h3>Choose Your Move</h3>
-<p>Choose Rock, Paper, or Scissors:</p>
-
-{% formfield player.choice %}
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Make Your Move</h4>
+    </div>
+    <div class="card-body">
+        {% formfield player.choice label="Choose Rock, Paper, or Scissors:" %}
+    </div>
+</div>
 
 {% next_button %}
+
 {% endblock %}

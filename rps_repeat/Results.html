@@ -2,30 +2,23 @@
 {% load otree static %}
 
 {% block title %}
-Round {{ round_number }} Results
 {% endblock %}
 
 {% block content %}
-<h2>Round {{ round_number }} Results</h2>
 
-<h3>Your Choice</h3>
-<p>{{ my_choice }}</p>
-
-<h3>Opponent's Choice</h3>
-<p>{{ opponent_choice }}</p>
-
-<h3>Result</h3>
-<p>{{ result_text }}</p>
-
-<h3>Points Earned This Round</h3>
-<p>{{ my_payoff }}</p>
-
-<h3>Your Total Score</h3>
-<p>{{ total_payoff }}</p>
-
-<h3>Game Progress</h3>
-<p>Round {{ round_number }} of {{ total_rounds }}</p>
-<p>{{ status_message }}</p>
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h4>Round {{ round_number }} Results</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>Your Choice:</strong> {{ my_choice }}</p>
+        <p><strong>Opponent's Choice:</strong> {{ opponent_choice }}</p>
+        <p><strong>Result:</strong> {{ result_text }}</p>
+        <p><strong>Points Earned This Round:</strong> {{ my_payoff }}</p>
+        <p><strong>Your Total Score:</strong> {{ total_payoff }}</p>
+    </div>
+</div>
 
 {% next_button %}
+
 {% endblock %}
