@@ -1,6 +1,11 @@
 """
 App-specific prompting strategies for single-player Rock Paper Scissors.
 Uses the general framework convention with get_prompts() function.
+
+'system' prompt is used to set the context for the bot,
+'analyze_page_q' is used to provide the bot with the game history and questions to answer.
+
+The specific prompts are those used by Vidler and Walsh (2025) https://arxiv.org/pdf/2503.02582
 """
 
 def get_prompts(role=None):
@@ -131,7 +136,7 @@ def get_available_roles():
 
 def get_role_description(role):
     """
-    Get a human-readable description of the prompting strategy.
+    Get a description of the prompting strategy.
     
     Args:
         role (str): The role/strategy name

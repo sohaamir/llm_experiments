@@ -9,7 +9,7 @@ Players play a single round against a randomly-choosing opponent.
 
 Bots can be configured to use different LLMs (player_models.csv) and prompting strategies (prompts.py).
 
-Prompting strategies taken from Vidler and Walsh (2025) https://arxiv.org/pdf/2503.02582
+Prompting strategies taken from (Vidler & Walsh, 2025) https://arxiv.org/pdf/2503.02582
 """
 
 class C(BaseConstants):
@@ -124,7 +124,7 @@ class Results(Page):
     @staticmethod
     def vars_for_template(player):
         return {
-            'player_choice_display': player.get_choice_display(),  # Fixed: no arguments
+            'player_choice_display': player.get_choice_display(),
             'opponent_choice_display': player.get_opponent_choice_display(),
             'result_text': {
                 'win': 'You Win!',
