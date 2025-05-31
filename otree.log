@@ -1,4 +1,0 @@
-[Errno 48] error while attempting to bind on address ('127.0.0.1', 8000): address already in use
-Open your browser to http://localhost:8000/
-To quit the server, press Control+C.
-
