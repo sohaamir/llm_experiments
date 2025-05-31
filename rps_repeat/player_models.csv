@@ -1,3 +1,3 @@
 player_id,model_name,role
-1,human
-2,gemini-1.5-flash
+1,gpt-4.1-nano-2025-04-14,P2
+2,gemini-1.5-flash,P5

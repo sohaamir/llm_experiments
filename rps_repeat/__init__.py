@@ -98,6 +98,19 @@ class Player(BasePlayer):
 
     # Model assignment
     model = models.StringField()  # Store the assigned model name
+
+    # Strategy/Role assignment
+    strategy = models.StringField(blank=True)
+    
+    def set_strategy_assignment(self):
+        """Set the strategy assignment based on session config"""
+        strategy_key = f'player_{self.id_in_group}_role'
+        if strategy_key in self.session.config:
+            self.strategy = self.session.config[strategy_key]
+        else:
+            self.strategy = "default"  # Default strategy for participants without specific role
+        
+        print(f"Player {self.id_in_group}: assigned strategy = {self.strategy}")
     
     # Simplified version of your method
     def set_model_assignment(self):
@@ -146,9 +159,10 @@ class GroupingWaitPage(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group):
-        # Set model assignments for all players in the group
+        # Set model and strategy assignments for all players in the group
         for player in group.get_players():
             player.set_model_assignment()
+            player.set_strategy_assignment()
     
     @staticmethod
     def is_displayed(player):

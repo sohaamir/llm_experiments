@@ -6,6 +6,7 @@ This module contains all the logic for running individual experimental sessions
 with app-specific configurations, prompting strategies, and per-player role assignments.
 """
 
+from pathlib import Path
 import datetime
 import logging
 import os
@@ -17,8 +18,9 @@ import csv
 import requests
 import botex
 import litellm
+import sqlite3
+import json
 import importlib.util
-from pathlib import Path
 
 logger = logging.getLogger("multi_app_experiment")
 
@@ -133,33 +135,105 @@ def configure_tinyllama_params(args, user_prompts):
     return modified_prompts, additional_params
 
 
-def export_ordered_response_data(csv_file, botex_db, session_id):
-    """Export botex response data with comprehension questions at the top and specific ordering"""
+def export_response_data(csv_file, botex_db, session_id):
+    """Export botex response data with summary and prompt information included"""
     try:
-        # Use botex's built-in function to get the raw responses
-        responses = botex.read_responses_from_botex_db(botex_db=botex_db, session_id=session_id)
+
+        # Connect to botex database
+        conn = sqlite3.connect(botex_db)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
         
-        if not responses:
-            logger.warning(f"No responses found for session {session_id}")
-            with open(csv_file, 'w', newline='') as f:
-                f.write("session_id,participant_id,round,question_id,answer,reason\n")
-                f.write(f"# No responses found for session {session_id}\n")
-            return
-            
-        logger.info(f"Found {len(responses)} responses for session {session_id}")
+        # Get conversations for this session
+        cursor.execute("SELECT * FROM conversations")
+        conversations = [dict(row) for row in cursor.fetchall()]
+        
+        # Filter by session_id if provided
+        if session_id:
+            conversations = [
+                c for c in conversations 
+                if json.loads(c['bot_parms'])['session_id'] == session_id
+            ]
+        
+        enhanced_responses = []
+        
+        for conversation in conversations:
+            try:
+                bot_parms = json.loads(conversation['bot_parms'])
+                participant_id = conversation['id']
+                
+                # Parse the conversation messages
+                messages = json.loads(conversation['conversation'])
+                
+                # Process each round of conversation
+                round_num = 1
+                current_prompt = ""
+                
+                for i, message in enumerate(messages):
+                    if message.get('role') == 'user':
+                        # This is a prompt to the bot
+                        current_prompt = message.get('content', '')
+                    
+                    elif message.get('role') == 'assistant':
+                        # This is a bot response
+                        try:
+                            response_data = json.loads(message.get('content', '{}'))
+                            
+                            # Extract summary if available
+                            summary = response_data.get('summary', '')
+                            
+                            # Extract answers
+                            answers = response_data.get('answers', {})
+                            
+                            for question_id, answer_data in answers.items():
+                                if question_id == 'round':
+                                    continue
+                                    
+                                enhanced_responses.append({
+                                    'session_id': bot_parms.get('session_id', ''),
+                                    'participant_id': participant_id,
+                                    'round': round_num,
+                                    'question_id': question_id,
+                                    'answer': answer_data.get('answer', ''),
+                                    'reason': answer_data.get('reason', ''),
+                                    'summary': summary,
+                                    'prompt': current_prompt
+                                })
+                            
+                            round_num += 1
+                            
+                        except json.JSONDecodeError:
+                            # Skip malformed responses
+                            continue
+                            
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Error processing conversation {conversation.get('id', 'unknown')}: {str(e)}")
+                continue
         
         # Sort responses by round and participant
-        ordered_responses = sorted(responses, key=lambda x: (int(x['round']), x['participant_id'], x['question_id']))
+        enhanced_responses.sort(key=lambda x: (int(x['round']), x['participant_id'], x['question_id']))
         
-        # Write to CSV with the correct order
-        with open(csv_file, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason'])
-            writer.writeheader()
-            writer.writerows(ordered_responses)
-            logger.info(f"Successfully wrote {len(ordered_responses)} responses to {csv_file}")
-            
+        # Write to CSV
+        if enhanced_responses:
+            fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
+            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(enhanced_responses)
+            logger.info(f"Successfully wrote {len(enhanced_responses)} enhanced responses to {csv_file}")
+        else:
+            # Write empty file with headers
+            fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
+            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+            logger.warning(f"No enhanced responses found for session {session_id}")
+        
+        cursor.close()
+        conn.close()
+        
     except Exception as e:
-        logger.error(f"Error in export_ordered_response_data: {str(e)}")
+        logger.error(f"Error in export_response_data: {str(e)}")
         
         # Fallback to standard export
         try:
@@ -170,11 +244,23 @@ def export_ordered_response_data(csv_file, botex_db, session_id):
                 session_id=session_id
             )
             logger.info(f"Standard export successful")
+
         except Exception as e2:
             logger.warning(f"Standard export also failed: {str(e2)}")
-            with open(csv_file, 'w', newline='') as f:
-                f.write("session_id,participant_id,round,question_id,answer,reason\n")
-                f.write(f"# Error exporting responses: {str(e)}\n")
+            fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
+            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerow({
+                    'session_id': session_id or 'unknown',
+                    'participant_id': 'error',
+                    'round': 1,
+                    'question_id': 'export_error',
+                    'answer': f'Export failed: {str(e)}',
+                    'reason': 'System error during data export',
+                    'summary': 'Error occurred during data export process',
+                    'prompt': 'N/A'
+                })
 
 
 def open_chrome_browser(url, max_attempts=5):
@@ -552,7 +638,7 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
         except Exception as e:
             logger.warning(f"Session {session_number}: Data normalization warning: {str(e)}")
         
-        # Export botex data
+        # Export botex data (replace the existing section)
         if n_bots > 0:
             try:
                 botex.export_participant_data(
@@ -565,14 +651,15 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                 logger.warning(f"Session {session_number}: Could not export botex participant data: {str(e)}")
             
             try:
-                export_ordered_response_data(
+                # Use enhanced export function instead of export_ordered_response_data
+                export_response_data(
                     os.path.join(output_dir, f"botex_{otree_session_id}_responses{model_suffix}.csv"),
                     botex_db=botex_db,
                     session_id=otree_session_id
                 )
-                logger.info(f"Session {session_number}: Botex response data exported")
+                logger.info(f"Session {session_number}: Enhanced botex response data exported")
             except Exception as e:
-                logger.warning(f"Session {session_number}: Error exporting botex responses: {str(e)}")
+                logger.warning(f"Session {session_number}: Error exporting enhanced botex responses: {str(e)}")
         
         # Create summary file
         summary_file = os.path.join(output_dir, f"experiment_summary_{otree_session_id}{model_suffix}.txt")
