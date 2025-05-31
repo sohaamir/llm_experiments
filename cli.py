@@ -300,7 +300,7 @@ Examples:
 
     # === MODEL PARAMETERS ===
     parser.add_argument(
-        "-mt", "--max-tokens", 
+        "-m", "--max-tokens", 
         type=int, 
         default=1024,
         help="Maximum tokens for LLM responses (default: 1024)"
