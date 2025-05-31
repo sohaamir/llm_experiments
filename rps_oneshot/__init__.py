@@ -52,6 +52,19 @@ class Player(BasePlayer):
     # Game result
     result = models.StringField()  # 'win', 'lose', 'tie'
     points_earned = models.IntegerField(initial=0)
+
+    # Strategy/Role assignment
+    strategy = models.StringField(blank=True)
+    
+    def set_strategy_assignment(self):
+        """Set the strategy assignment based on session config"""
+        strategy_key = f'player_{self.id_in_subsession}_role'
+        if strategy_key in self.session.config:
+            self.strategy = self.session.config[strategy_key]
+        else:
+            self.strategy = "default"  # Default strategy for participants without specific role
+        
+        print(f"Player {self.id_in_subsession}: assigned strategy = {self.strategy}")
     
     def set_opponent_choice(self):
         """Randomly determine opponent's choice"""
@@ -86,6 +99,12 @@ class Player(BasePlayer):
 
 class Instructions(Page):
     """Instructions page explaining the Rock Paper Scissors game"""
+
+    @staticmethod
+    def after_all_players_arrive(group):
+        # Set model assignments for all players in the group
+        for player in group.get_players():
+            player.set_model_assignment()
     
     @staticmethod
     def vars_for_template(player):
@@ -103,6 +122,10 @@ class Choice(Page):
 
     @staticmethod
     def vars_for_template(player):
+        # Set strategy on first page visit
+        if not player.strategy:
+            player.set_strategy_assignment()
+            
         return {
             'win_payoff': C.WIN_PAYOFF,
             'lose_payoff': C.LOSE_PAYOFF,
