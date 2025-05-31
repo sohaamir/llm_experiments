@@ -22,7 +22,11 @@ ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD')
 # OTREE-SPECIFIC SETTINGS
 # ----------------------------------------------------------------
 OTREE_PRODUCTION = True
-PARTICIPANT_FIELDS = ['finished']
+PARTICIPANT_FIELDS = [
+    'finished',
+    'model',      # ← Round-invariant version
+    'strategy'    # ← Round-invariant version
+]
 SESSION_FIELDS = []
 USE_POINTS = False
 

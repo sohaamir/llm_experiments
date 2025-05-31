@@ -20,7 +20,7 @@ Prompting strategies are taken from Vidler and Walsh (2025) https://arxiv.org/pd
 class C(BaseConstants):
     NAME_IN_URL = 'rps_repeat'
     PLAYERS_PER_GROUP = 2
-    NUM_ROUNDS = 3
+    NUM_ROUNDS = 2
     
     # Game choices
     CHOICES = [
@@ -96,32 +96,44 @@ class Player(BasePlayer):
     result = models.StringField()  # 'win', 'lose', 'tie'
     round_payoff = models.IntegerField(initial=0)
 
-    # Model assignment
-    model = models.StringField()  # Store the assigned model name
-
-    # Strategy/Role assignment
-    strategy = models.StringField(blank=True)
+    # Model assignment (stored in both Player and Participant for analysis convenience)
+    model = models.StringField()  # Round-specific copy for easy analysis
+    strategy = models.StringField(blank=True)  # Round-specific copy for easy analysis
     
     def set_strategy_assignment(self):
-        """Set the strategy assignment based on session config"""
+        """Set the strategy assignment based on session config - stores in both places"""
         strategy_key = f'player_{self.id_in_group}_role'
         if strategy_key in self.session.config:
-            self.strategy = self.session.config[strategy_key]
+            strategy_value = self.session.config[strategy_key]
         else:
-            self.strategy = "default"  # Default strategy for participants without specific role
+            strategy_value = "default"  # Default strategy for participants without specific role
         
-        print(f"Player {self.id_in_group}: assigned strategy = {self.strategy}")
+        # Store in both participant (round-invariant) and player (round-specific) for analysis
+        self.participant.strategy = strategy_value
+        self.strategy = strategy_value
+        
+        print(f"Player {self.id_in_group}: assigned strategy = {strategy_value}")
     
-    # Simplified version of your method
     def set_model_assignment(self):
-        """Set the model assignment based on player position"""
+        """Set the model assignment based on player position - stores in both places"""
         intended_model_key = f'player_{self.id_in_group}_intended_model'
         if intended_model_key in self.session.config:
-            self.model = self.session.config[intended_model_key]
+            model_value = self.session.config[intended_model_key]
         else:
-            self.model = "human"  # Default for human participants
+            model_value = "human"  # Default for human participants
         
-        print(f"Player {self.id_in_group}: assigned model = {self.model}")
+        # Store in both participant (round-invariant) and player (round-specific) for analysis
+        self.participant.model = model_value
+        self.model = model_value
+        
+        print(f"Player {self.id_in_group}: assigned model = {model_value}")
+    
+    def sync_session_fields(self):
+        """Sync session-level fields to round-specific fields (for rounds after round 1)"""
+        if hasattr(self.participant, 'model'):
+            self.model = self.participant.model
+        if hasattr(self.participant, 'strategy'):
+            self.strategy = self.participant.strategy
     
     def choice_display_text(self, choice_letter):
         """Convert choice letter to full name - renamed to avoid conflict with oTree's get_choice_display()"""
@@ -150,6 +162,7 @@ class Player(BasePlayer):
             })
         return history
 
+
 # PAGES
 class GroupingWaitPage(WaitPage):
     """Wait page to form groups of 2 players"""
@@ -168,13 +181,24 @@ class GroupingWaitPage(WaitPage):
     def is_displayed(player):
         return player.round_number == 1
 
+
 class Choice(Page):
     """Page where player makes their Rock Paper Scissors choice"""
     form_model = 'player'
     form_fields = ['choice']
     
     @staticmethod
+    def before_next_page(player, timeout_happened):
+        # Sync session-level fields for rounds after round 1
+        if player.round_number > 1:
+            player.sync_session_fields()
+    
+    @staticmethod
     def vars_for_template(player):
+        # Sync session-level fields for display
+        if player.round_number > 1:
+            player.sync_session_fields()
+            
         history = player.get_round_history()
         return {
             'num_rounds': C.NUM_ROUNDS,

@@ -27,6 +27,8 @@ import importlib.util
 logger = logging.getLogger("multi_app_experiment")
 
 
+
+
 def load_app_prompts(app_name, role=None):
     """
     Load app-specific prompts from the app's prompts.py file.
@@ -241,7 +243,6 @@ def export_response_data(csv_file, botex_db, session_id):
         # Sort responses by participant, round, and question order
         def extract_question_number(question_id):
             """Extract question number for sorting"""
-            import re
             # Look for numbers in question_id
             numbers = re.findall(r'\d+', str(question_id))
             return int(numbers[0]) if numbers else 999
@@ -345,7 +346,7 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
         
         # Create session-specific output directory
         app_suffix = f"_{args.app}"
-        
+
         # Remove the roles from file naming
         model_suffix = f"{app_suffix}_nhumans{n_humans_actual}_nbots{n_bots}"
 
