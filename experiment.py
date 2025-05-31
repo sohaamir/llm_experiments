@@ -6,10 +6,12 @@ This module contains all the logic for running individual experimental sessions
 with app-specific configurations, prompting strategies, and per-player role assignments.
 """
 
+from threading import Thread
 from pathlib import Path
 import datetime
 import logging
 import os
+import re
 import platform
 import subprocess
 import time
@@ -136,9 +138,8 @@ def configure_tinyllama_params(args, user_prompts):
 
 
 def export_response_data(csv_file, botex_db, session_id):
-    """Export botex response data with summary and prompt information included"""
+    """Export botex response data with proper round and question tracking"""
     try:
-
         # Connect to botex database
         conn = sqlite3.connect(botex_db)
         conn.row_factory = sqlite3.Row
@@ -165,14 +166,25 @@ def export_response_data(csv_file, botex_db, session_id):
                 # Parse the conversation messages
                 messages = json.loads(conversation['conversation'])
                 
-                # Process each round of conversation
-                round_num = 1
-                current_prompt = ""
+                # Track rounds and questions more systematically
+                current_round = 1
+                questions_answered_in_round = 0
+                previous_prompt = ""
                 
                 for i, message in enumerate(messages):
                     if message.get('role') == 'user':
                         # This is a prompt to the bot
                         current_prompt = message.get('content', '')
+                        
+                        # Detect round transitions by looking for round indicators in prompts
+                        round_match = re.search(r'[Rr]ound\s*(\d+)', current_prompt)
+                        if round_match:
+                            detected_round = int(round_match.group(1))
+                            if detected_round != current_round:
+                                current_round = detected_round
+                                questions_answered_in_round = 0
+                        
+                        previous_prompt = current_prompt
                     
                     elif message.get('role') == 'assistant':
                         # This is a bot response
@@ -185,22 +197,38 @@ def export_response_data(csv_file, botex_db, session_id):
                             # Extract answers
                             answers = response_data.get('answers', {})
                             
-                            for question_id, answer_data in answers.items():
-                                if question_id == 'round':
-                                    continue
+                            # If we have answers, process them
+                            if answers:
+                                # Check if this looks like a new round based on question patterns
+                                # If we see questions that suggest round restart, increment round
+                                question_ids = list(answers.keys())
+                                
+                                # Simple heuristic: if we've answered questions and now see 
+                                # what looks like initial questions again, it might be a new round
+                                initial_question_patterns = ['choice', 'decision', 'select', 'pick', 'vote']
+                                looks_like_initial = any(pattern in str(qid).lower() for qid in question_ids 
+                                                       for pattern in initial_question_patterns)
+                                
+                                if looks_like_initial and questions_answered_in_round > 2:
+                                    current_round += 1
+                                    questions_answered_in_round = 0
+                                
+                                for question_id, answer_data in answers.items():
+                                    if question_id == 'round':
+                                        continue
                                     
-                                enhanced_responses.append({
-                                    'session_id': bot_parms.get('session_id', ''),
-                                    'participant_id': participant_id,
-                                    'round': round_num,
-                                    'question_id': question_id,
-                                    'answer': answer_data.get('answer', ''),
-                                    'reason': answer_data.get('reason', ''),
-                                    'summary': summary,
-                                    'prompt': current_prompt
-                                })
-                            
-                            round_num += 1
+                                    enhanced_responses.append({
+                                        'session_id': bot_parms.get('session_id', ''),
+                                        'participant_id': participant_id,
+                                        'round': current_round,
+                                        'question_id': question_id,
+                                        'answer': answer_data.get('answer', ''),
+                                        'reason': answer_data.get('reason', ''),
+                                        'summary': summary,
+                                        'prompt': previous_prompt[:500] + '...' if len(previous_prompt) > 500 else previous_prompt
+                                    })
+                                    
+                                    questions_answered_in_round += 1
                             
                         except json.JSONDecodeError:
                             # Skip malformed responses
@@ -210,23 +238,32 @@ def export_response_data(csv_file, botex_db, session_id):
                 logger.warning(f"Error processing conversation {conversation.get('id', 'unknown')}: {str(e)}")
                 continue
         
-        # Sort responses by round and participant
-        enhanced_responses.sort(key=lambda x: (int(x['round']), x['participant_id'], x['question_id']))
+        # Sort responses by participant, round, and question order
+        def extract_question_number(question_id):
+            """Extract question number for sorting"""
+            import re
+            # Look for numbers in question_id
+            numbers = re.findall(r'\d+', str(question_id))
+            return int(numbers[0]) if numbers else 999
+        
+        enhanced_responses.sort(key=lambda x: (
+            x['participant_id'], 
+            int(x['round']), 
+            extract_question_number(x['question_id']),
+            x['question_id']
+        ))
         
         # Write to CSV
+        fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
+        
+        with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(enhanced_responses)
+        
         if enhanced_responses:
-            fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
-            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(enhanced_responses)
             logger.info(f"Successfully wrote {len(enhanced_responses)} enhanced responses to {csv_file}")
         else:
-            # Write empty file with headers
-            fieldnames = ['session_id', 'participant_id', 'round', 'question_id', 'answer', 'reason', 'summary', 'prompt']
-            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
             logger.warning(f"No enhanced responses found for session {session_id}")
         
         cursor.close()
@@ -308,10 +345,10 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
         
         # Create session-specific output directory
         app_suffix = f"_{args.app}"
-        roles_used = set(player_roles.values()) if player_roles else set()
-        roles_suffix = f"_roles{'_'.join(sorted(roles_used))}" if roles_used else ""
-        model_suffix = f"{app_suffix}{roles_suffix}_nhumans{n_humans_actual}_nbots{n_bots}"
         
+        # Remove the roles from file naming
+        model_suffix = f"{app_suffix}_nhumans{n_humans_actual}_nbots{n_bots}"
+
         output_dir = os.path.join(args.output_dir, f"session_{session_id}{model_suffix}")
         os.makedirs(output_dir, exist_ok=True)
         
@@ -453,7 +490,7 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                     })
                     logger.info(f"Session {session_number}: llama.cpp server started")
             
-            # Run bots individually with assigned models and roles
+            # Run bots in parallel threads with assigned models and roles
             bot_threads = []
             bot_idx = 0
 
@@ -502,18 +539,21 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                                 modified_prompts, tinyllama_params = configure_tinyllama_params(args, user_prompts)
                                 user_prompts = modified_prompts
                             
-                            thread = botex.run_single_bot(
-                                url=url,
-                                session_id=otree_session_id,
-                                participant_id=f"P{player_id}",
-                                botex_db=botex_db,
-                                model=model_info['full_name'],
-                                api_key=api_key,
-                                user_prompts=user_prompts,
-                                temperature=args.temperature,
-                                max_tokens=args.max_tokens,
-                                throttle=not args.no_throttle,
-                                wait=False
+                            # IMPORTANT: Use run_bot directly instead of run_single_bot to avoid duplicate insertion
+                            thread = Thread(
+                                target=botex.run_bot,
+                                kwargs={
+                                    'url': url,
+                                    'session_id': otree_session_id,
+                                    'botex_db': botex_db,
+                                    'model': model_info['full_name'],
+                                    'api_key': api_key,
+                                    'user_prompts': user_prompts,
+                                    'temperature': args.temperature,
+                                    'max_tokens': args.max_tokens,
+                                    'throttle': not args.no_throttle,
+                                    'full_conv_history': False
+                                }
                             )
                             bot_threads.append(thread)
                             thread.start()
@@ -610,10 +650,10 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
             # All participants were bots and have already completed
             logger.info(f"Session {session_number}: All bot participants have completed")
         
-        # Export data using botex standard functions
-        logger.info(f"Session {session_number}: Exporting data...")
-        
-        # Export oTree data
+        # Export data using botex standard functions with comprehensive coverage
+        logger.info(f"Session {session_number}: Exporting comprehensive data...")
+
+        # Export oTree wide data
         otree_wide_csv = os.path.join(output_dir, f"otree_{otree_session_id}_wide{model_suffix}.csv")
         try:
             botex.export_otree_data(
@@ -622,23 +662,33 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                 admin_name='admin',
                 admin_password=os.environ.get('OTREE_ADMIN_PASSWORD')
             )
-            logger.info(f"Session {session_number}: oTree data exported")
+            logger.info(f"Session {session_number}: oTree wide data exported")
         except Exception as e:
-            logger.error(f"Session {session_number}: Failed to export oTree data: {str(e)}")
-        
-        # Normalize oTree data
+            logger.error(f"Session {session_number}: Failed to export oTree wide data: {str(e)}")
+
+        # Normalize oTree data to get all levels (session, participant, group, player)
         try:
-            botex.normalize_otree_data(
+            normalized_data = botex.normalize_otree_data(
                 otree_wide_csv, 
                 store_as_csv=True,
                 data_exp_path=output_dir,
                 exp_prefix=f"otree_{otree_session_id}{model_suffix}"
             )
-            logger.info(f"Session {session_number}: oTree data normalized")
+            logger.info(f"Session {session_number}: oTree data normalized into separate files")
+            
+            # Log what data files were created
+            expected_files = ['session', 'participant', 'group', 'player']
+            for data_type in expected_files:
+                file_path = os.path.join(output_dir, f"otree_{otree_session_id}{model_suffix}_{data_type}.csv")
+                if os.path.exists(file_path):
+                    logger.info(f"  ✓ Created {data_type} data: {file_path}")
+                else:
+                    logger.warning(f"  ✗ Missing {data_type} data file")
+                    
         except Exception as e:
             logger.warning(f"Session {session_number}: Data normalization warning: {str(e)}")
-        
-        # Export botex data (replace the existing section)
+
+        # Export botex data if there were bots
         if n_bots > 0:
             try:
                 botex.export_participant_data(
@@ -651,7 +701,7 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                 logger.warning(f"Session {session_number}: Could not export botex participant data: {str(e)}")
             
             try:
-                # Use enhanced export function instead of export_ordered_response_data
+                # Use enhanced export function
                 export_response_data(
                     os.path.join(output_dir, f"botex_{otree_session_id}_responses{model_suffix}.csv"),
                     botex_db=botex_db,
@@ -660,41 +710,40 @@ def run_session(args, session_number, player_models, player_roles, is_human_list
                 logger.info(f"Session {session_number}: Enhanced botex response data exported")
             except Exception as e:
                 logger.warning(f"Session {session_number}: Error exporting enhanced botex responses: {str(e)}")
-        
-        # Create summary file
-        summary_file = os.path.join(output_dir, f"experiment_summary_{otree_session_id}{model_suffix}.txt")
+
+        # Create comprehensive data summary
+        summary_file = os.path.join(output_dir, f"data_export_summary_{otree_session_id}{model_suffix}.txt")
         with open(summary_file, 'w') as f:
-            f.write(f"Multi-App Experiment Summary - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Data Export Summary - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("="*70 + "\n\n")
+            
+            f.write("FILES EXPORTED:\n")
+            f.write("-" * 20 + "\n")
+            
+            # List all files in output directory
+            for file_name in sorted(os.listdir(output_dir)):
+                if file_name.endswith('.csv'):
+                    file_path = os.path.join(output_dir, file_name)
+                    file_size = os.path.getsize(file_path)
+                    f.write(f"  {file_name} ({file_size:,} bytes)\n")
+            
+            f.write(f"\nEXPERIMENT DETAILS:\n")
+            f.write("-" * 20 + "\n")
             f.write(f"App: {args.app}\n")
             f.write(f"Session ID: {otree_session_id}\n")
-            f.write(f"Session Number: {session_number}\n")
-            f.write(f"Participants: {len(is_human_list)} total ({n_humans_actual} human, {n_bots} bots)\n\n")
+            f.write(f"Total Participants: {len(is_human_list)}\n")
+            f.write(f"Human Participants: {n_humans_actual}\n")
+            f.write(f"Bot Participants: {n_bots}\n")
             
-            if session['human_urls']:
-                f.write("Human participant URLs:\n")
-                human_count = 0
-                for i, is_human in enumerate(session['is_human']):
-                    if is_human:
-                        player_position = i + 1
-                        role_info = f" (role: {player_roles.get(player_position, 'none')})" if player_position in player_roles else ""
-                        f.write(f"  Player {player_position}: {session['human_urls'][human_count]}{role_info}\n")
-                        human_count += 1
-            
-            if player_models and n_bots > 0:
-                f.write("\nBot model and role assignments:\n")
-                bot_idx = 0
-                for i, is_human in enumerate(session['is_human']):
-                    if not is_human:
-                        player_id = i + 1
-                        if player_id in player_models:
-                            model_name = player_models[player_id]
-                            provider = available_models[model_name]['provider']
-                            role = player_roles.get(player_id, 'default')
-                            f.write(f"  Player {player_id}: {model_name} ({provider}) with role '{role}'\n")
-                        bot_idx += 1
-        
-        logger.info(f"Session {session_number}: Session completed successfully")
+            if player_roles:
+                f.write(f"\nROLE ASSIGNMENTS:\n")
+                f.write("-" * 20 + "\n")
+                for player_id, role in player_roles.items():
+                    participant_type = "HUMAN" if session['is_human'][player_id - 1] else "BOT"
+                    model_info = f" ({player_models.get(player_id, 'N/A')})" if participant_type == "BOT" else ""
+                    f.write(f"  Player {player_id}: {role} ({participant_type}){model_info}\n")
+
+        logger.info(f"Session {session_number}: Comprehensive data export completed")
         return {"success": True, "session_id": otree_session_id, "output_dir": output_dir}
     
     except Exception as e:
