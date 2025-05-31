@@ -1,7 +1,5 @@
 # Virtual Environment
-venv/
-llm_env/
-otree_env/
+botexenv/
 
 # Environment Variables
 .env
@@ -55,21 +53,13 @@ llama_server
 # Environment
 .env
 botex.env
-botexenv/
 ,cache*
 
 # Misc scripts and txt files
-run_tinyllama.sh 
-run_llama_server.sh 
-install_llama_cpp.sh 
-download_model.sh 
 long_prompts.txt 
 botex_env.txt 
 broadcast_message.py
-
-# Patches
-deepseek_patch.py
-groq_instructor_patch.py
+otree.log
 
 # Botex data
 botex_source_code_copy/
@@ -79,3 +69,6 @@ botex_source_code_copy/
 
 # Apps
 moral_inference/
+
+# Miscellaneous
+baml_src/
