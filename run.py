@@ -5,21 +5,15 @@ run.py - Main script for running multi-app experiments
 This script orchestrates the experiment workflow, hosting oTree experiments using botex.
 """
 
+import botex
 import sys
 import os
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-# Import configuration and CLI functions
-from cli import (
-    parse_arguments,
-    get_app_specific_model_mapping,
-    get_available_models,
-    validate_player_models
-)
-
-# Import experiment execution functions
-from experiment import run_session
+# Import experiment and CLI functions
+from experiment import *
+from cli import *
 
 # Set up logging
 logging.basicConfig(
@@ -363,7 +357,6 @@ Use --list-apps to see available apps.
     # Start the experiment
     try:
         # Import botex here to ensure environment variables are loaded
-        import botex
         logger.info("Starting oTree server...")
         
         # Start oTree server
